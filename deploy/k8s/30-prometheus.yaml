@@ -1,0 +1,119 @@
+# Prometheus: coleta os serviços (anotação prometheus.io/scrape), o RabbitMQ e o cAdvisor do kubelet.
+# A configuração vem de observabilidade/prometheus.yml (configMapGenerator do kustomization.yaml).
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: prometheus
+  namespace: conexao-solidaria
+  labels:
+    app.kubernetes.io/name: prometheus
+    app.kubernetes.io/part-of: conexao-solidaria
+---
+# Permissão mínima: descobrir pods e nós, e ler métricas do kubelet (cAdvisor) pelo API server.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: conexao-solidaria-prometheus
+  labels:
+    app.kubernetes.io/name: prometheus
+    app.kubernetes.io/part-of: conexao-solidaria
+rules:
+  - apiGroups: [""]
+    resources: [nodes, nodes/proxy, nodes/metrics, pods, services, endpoints]
+    verbs: [get, list, watch]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: conexao-solidaria-prometheus
+  labels:
+    app.kubernetes.io/name: prometheus
+    app.kubernetes.io/part-of: conexao-solidaria
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: conexao-solidaria-prometheus
+subjects:
+  - kind: ServiceAccount
+    name: prometheus
+    namespace: conexao-solidaria
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: prometheus
+  namespace: conexao-solidaria
+  labels:
+    app.kubernetes.io/name: prometheus
+    app.kubernetes.io/part-of: conexao-solidaria
+spec:
+  selector:
+    app.kubernetes.io/name: prometheus
+  ports:
+    - name: http
+      port: 9090
+      targetPort: http
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: prometheus
+  namespace: conexao-solidaria
+  labels:
+    app.kubernetes.io/name: prometheus
+    app.kubernetes.io/component: observabilidade
+    app.kubernetes.io/part-of: conexao-solidaria
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: prometheus
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: prometheus
+        app.kubernetes.io/component: observabilidade
+        app.kubernetes.io/part-of: conexao-solidaria
+    spec:
+      serviceAccountName: prometheus
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 65534
+        fsGroup: 65534
+      containers:
+        - name: prometheus
+          image: prom/prometheus:v3.5.0
+          args:
+            - --config.file=/etc/prometheus/prometheus.yml
+            - --storage.tsdb.path=/prometheus
+            - --storage.tsdb.retention.time=2d
+            - --web.enable-lifecycle
+          ports:
+            - name: http
+              containerPort: 9090
+          readinessProbe:
+            httpGet: { path: /-/ready, port: http }
+            periodSeconds: 10
+          livenessProbe:
+            httpGet: { path: /-/healthy, port: http }
+            initialDelaySeconds: 15
+            periodSeconds: 20
+          resources:
+            requests: { cpu: 100m, memory: 256Mi }
+            limits: { cpu: "1", memory: 512Mi }
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+          volumeMounts:
+            - name: configuracao
+              mountPath: /etc/prometheus
+            - name: dados
+              mountPath: /prometheus
+      volumes:
+        - name: configuracao
+          configMap:
+            name: prometheus-config
+        - name: dados
+          emptyDir: {}

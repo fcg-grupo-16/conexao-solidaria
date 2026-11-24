@@ -44,6 +44,8 @@ kubectl -n conexao-solidaria get pods
 | `campanhas-api` | http://localhost:5082/swagger |
 | `doacoes-worker` | http://localhost:5083/health/ready |
 | RabbitMQ Management | http://localhost:15672 (`conexao` / `conexao-demo`) |
+| Grafana | http://localhost:3000 (dashboard **Conexão Solidária — Visão geral**; leitura sem login, admin `admin` / `conexao-demo`) |
+| Prometheus | http://localhost:9090 |
 
 Os manifestos ficam em [`deploy/k8s/`](deploy/k8s) (Kustomize): namespace, ConfigMaps, Secrets, PostgreSQL e RabbitMQ (StatefulSet com volume), Redis, e um Deployment + Service por serviço — APIs e worker com 2 réplicas, probes de *startup*, *readiness* e *liveness*, limites de recurso, usuário não root e sistema de arquivos somente leitura. A chave do JWT e as credenciais ficam num Secret só, referenciado por quem precisa (um valor, um lugar).
 
@@ -146,6 +148,8 @@ Métricas de negócio, além das HTTP (`http_server_request_duration_seconds`), 
 | `usuarios-api` | `usuarios_cadastrados_total`, `usuarios_logins_total{resultado,perfil}` |
 | `campanhas-api` | `doacoes_recebidas_total`, `doacoes_valor_recebido_BRL_total`, `doacoes_recusadas_total{motivo}` |
 | `doacoes-worker` | `doacoes_processadas_total`, `doacoes_rejeitadas_total`, `doacoes_reentregas_ignoradas_total`, `doacoes_valor_processado_BRL_total`, `doacoes_atraso_processamento_seconds` |
+
+No cluster, o **Prometheus** coleta os serviços (pods com a anotação `prometheus.io/scrape`), o RabbitMQ (plugin `rabbitmq_prometheus`, por fila) e o cAdvisor do kubelet (CPU e memória por pod). O **Grafana** sobe com o datasource e o dashboard **provisionados** a partir de [`deploy/k8s/observabilidade/`](deploy/k8s/observabilidade): doações recebidas × processadas, valor processado, fila do RabbitMQ e seus consumidores, atraso até o processamento, requisições/latência/status HTTP por serviço e rota, cadastros e logins, CPU e memória por pod e mensagens do MassTransit.
 
 Na prontidão, a queda do RabbitMQ ou do Redis deixa a `campanhas-api` como `Degraded` (o outbox guarda as doações e o painel lê do banco) e o `doacoes-worker` como `Unhealthy` (sem broker ele não trabalha).
 
