@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Configuração do MassTransit/RabbitMQ comum ao publicador e ao consumidor. -->
+  <ItemGroup>
+    <PackageReference Include="MassTransit" />
+    <PackageReference Include="MassTransit.RabbitMQ" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\ConexaoSolidaria.Contracts\ConexaoSolidaria.Contracts.csproj" />
+    <ProjectReference Include="..\ConexaoSolidaria.Observabilidade\ConexaoSolidaria.Observabilidade.csproj" />
+  </ItemGroup>
+</Project>

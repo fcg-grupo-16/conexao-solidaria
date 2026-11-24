@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
 using Testcontainers.PostgreSql;
+using Testcontainers.RabbitMq;
 
 [assembly: AssemblyFixture(typeof(Campanhas.IntegrationTests.CampanhasApiFactory))]
 
@@ -18,6 +19,11 @@ public sealed class CampanhasApiFactory : WebApplicationFactory<Program>, IAsync
     private readonly PostgreSqlContainer _postgres = new PostgreSqlBuilder("postgres:17-alpine")
         .WithDatabase("campanhasdb")
         .Build();
+
+    private readonly RabbitMqContainer _rabbit = new RabbitMqBuilder("rabbitmq:3.13-management-alpine").Build();
+
+    /// <summary>URI AMQP do broker de teste.</summary>
+    public Uri RabbitMqUri => new(_rabbit.GetConnectionString());
 
     /// <summary>Connection string do container.</summary>
     public string ConnectionString => _postgres.GetConnectionString();
@@ -42,7 +48,7 @@ public sealed class CampanhasApiFactory : WebApplicationFactory<Program>, IAsync
     /// <inheritdoc />
     public async ValueTask InitializeAsync()
     {
-        await _postgres.StartAsync();
+        await Task.WhenAll(_postgres.StartAsync(), _rabbit.StartAsync());
         // Migra já aqui: testes de persistência usam o banco antes de a API ser criada.
         await using var banco = NovoContexto();
         await banco.Database.MigrateAsync();
@@ -54,6 +60,10 @@ public sealed class CampanhasApiFactory : WebApplicationFactory<Program>, IAsync
         builder.UseEnvironment("Testing");
         builder.UseSetting("ConnectionStrings:CampanhasDb", ConnectionString);
         builder.UseSetting("Jwt:ChaveSecreta", GeradorDeToken.Chave);
+        builder.UseSetting("RabbitMq:Host", RabbitMqUri.Host);
+        builder.UseSetting("RabbitMq:Porta", RabbitMqUri.Port.ToString(System.Globalization.CultureInfo.InvariantCulture));
+        builder.UseSetting("RabbitMq:Usuario", "rabbitmq");
+        builder.UseSetting("RabbitMq:Senha", "rabbitmq");
     }
 
     /// <inheritdoc />
@@ -61,5 +71,6 @@ public sealed class CampanhasApiFactory : WebApplicationFactory<Program>, IAsync
     {
         await base.DisposeAsync();
         await _postgres.DisposeAsync();
+        await _rabbit.DisposeAsync();
     }
 }
