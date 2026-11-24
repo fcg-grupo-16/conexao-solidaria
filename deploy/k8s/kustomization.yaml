@@ -1,0 +1,15 @@
+# kubectl apply -k deploy/k8s
+# As imagens dos serviços usam a tag "dev" (a mesma do docker compose build). O scripts/deploy-minikube.sh
+# troca pela tag do COMMIT num overlay temporário: com tag móvel, o "minikube image load" não substitui a
+# imagem e o pod segue rodando o binário antigo sem nenhum erro.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - 00-namespace.yaml
+  - 01-plataforma.yaml
+  - 10-postgres.yaml
+  - 11-rabbitmq.yaml
+  - 12-redis.yaml
+  - 20-usuarios-api.yaml
+  - 21-campanhas-api.yaml
+  - 22-doacoes-worker.yaml

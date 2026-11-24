@@ -1,0 +1,53 @@
+# Configuração e segredos COMPARTILHADOS entre serviços: um valor, um lugar.
+# - jwt: a mesma chave na usuarios-api (emite) e na campanhas-api (valida).
+# - rabbitmq / postgres: credenciais usadas pela infraestrutura e pelos serviços.
+# Todos os valores são de DEMONSTRAÇÃO. Nunca use em produção.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: plataforma
+  namespace: conexao-solidaria
+  labels:
+    app.kubernetes.io/part-of: conexao-solidaria
+data:
+  ASPNETCORE_ENVIRONMENT: Production
+  Jwt__Issuer: ConexaoSolidaria
+  Jwt__Audience: ConexaoSolidaria
+  RabbitMq__Host: rabbitmq
+  RabbitMq__Porta: "5672"
+  RabbitMq__VirtualHost: /
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: jwt
+  namespace: conexao-solidaria
+  labels:
+    app.kubernetes.io/part-of: conexao-solidaria
+type: Opaque
+stringData:
+  Jwt__ChaveSecreta: chave-de-demonstracao-conexao-solidaria-2026-nao-usar-em-producao
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: rabbitmq
+  namespace: conexao-solidaria
+  labels:
+    app.kubernetes.io/part-of: conexao-solidaria
+type: Opaque
+stringData:
+  usuario: conexao
+  senha: conexao-demo
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: postgres
+  namespace: conexao-solidaria
+  labels:
+    app.kubernetes.io/part-of: conexao-solidaria
+type: Opaque
+stringData:
+  usuario: conexao
+  senha: conexao-demo
