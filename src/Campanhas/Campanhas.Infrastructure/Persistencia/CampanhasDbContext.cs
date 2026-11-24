@@ -1,4 +1,5 @@
 using Campanhas.Domain;
+using MassTransit;
 using Microsoft.EntityFrameworkCore;
 
 namespace Campanhas.Infrastructure.Persistencia;
@@ -46,5 +47,11 @@ public sealed class CampanhasDbContext(DbContextOptions<CampanhasDbContext> opti
         doacao.HasOne<Campanha>().WithMany().HasForeignKey(d => d.CampanhaId).OnDelete(DeleteBehavior.Restrict);
         doacao.HasIndex(d => d.CampanhaId);
         doacao.HasIndex(d => d.DoadorId);
+
+        // Tabelas do outbox transacional do MassTransit: a doação e o DoacaoRecebidaEvent são gravados
+        // no mesmo SaveChanges; o evento só vai para o RabbitMQ depois do commit (ADR 0003).
+        modelBuilder.AddInboxStateEntity();
+        modelBuilder.AddOutboxMessageEntity();
+        modelBuilder.AddOutboxStateEntity();
     }
 }

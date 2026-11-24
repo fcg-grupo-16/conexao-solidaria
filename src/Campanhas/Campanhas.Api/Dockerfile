@@ -9,6 +9,7 @@ WORKDIR /src
 # Restore em camada própria: só muda quando um .csproj ou as versões centrais mudam.
 COPY global.json Directory.Build.props Directory.Packages.props .editorconfig ./
 COPY src/BuildingBlocks/ConexaoSolidaria.Contracts/ConexaoSolidaria.Contracts.csproj src/BuildingBlocks/ConexaoSolidaria.Contracts/
+COPY src/BuildingBlocks/ConexaoSolidaria.Mensageria/ConexaoSolidaria.Mensageria.csproj src/BuildingBlocks/ConexaoSolidaria.Mensageria/
 COPY src/BuildingBlocks/ConexaoSolidaria.Observabilidade/ConexaoSolidaria.Observabilidade.csproj src/BuildingBlocks/ConexaoSolidaria.Observabilidade/
 COPY src/BuildingBlocks/ConexaoSolidaria.Persistencia/ConexaoSolidaria.Persistencia.csproj src/BuildingBlocks/ConexaoSolidaria.Persistencia/
 COPY src/BuildingBlocks/ConexaoSolidaria.Web/ConexaoSolidaria.Web.csproj src/BuildingBlocks/ConexaoSolidaria.Web/

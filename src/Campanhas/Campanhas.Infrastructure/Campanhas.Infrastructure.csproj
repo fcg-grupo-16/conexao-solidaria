@@ -5,10 +5,12 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks.EntityFrameworkCore" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" PrivateAssets="all" />
+    <PackageReference Include="MassTransit.EntityFrameworkCore" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Campanhas.Domain\Campanhas.Domain.csproj" />
     <ProjectReference Include="..\..\BuildingBlocks\ConexaoSolidaria.Observabilidade\ConexaoSolidaria.Observabilidade.csproj" />
     <ProjectReference Include="..\..\BuildingBlocks\ConexaoSolidaria.Persistencia\ConexaoSolidaria.Persistencia.csproj" />
+    <ProjectReference Include="..\..\BuildingBlocks\ConexaoSolidaria.Mensageria\ConexaoSolidaria.Mensageria.csproj" />
   </ItemGroup>
 </Project>

@@ -2,6 +2,7 @@
   <Folder Name="/src/" />
   <Folder Name="/src/BuildingBlocks/">
     <Project Path="src/BuildingBlocks/ConexaoSolidaria.Contracts/ConexaoSolidaria.Contracts.csproj" />
+    <Project Path="src/BuildingBlocks/ConexaoSolidaria.Mensageria/ConexaoSolidaria.Mensageria.csproj" />
     <Project Path="src/BuildingBlocks/ConexaoSolidaria.Observabilidade/ConexaoSolidaria.Observabilidade.csproj" />
     <Project Path="src/BuildingBlocks/ConexaoSolidaria.Persistencia/ConexaoSolidaria.Persistencia.csproj" />
     <Project Path="src/BuildingBlocks/ConexaoSolidaria.Web/ConexaoSolidaria.Web.csproj" />

@@ -1,6 +1,7 @@
 using Campanhas.Infrastructure.Persistencia;
 using ConexaoSolidaria.Observabilidade;
 using ConexaoSolidaria.Persistencia;
+using MassTransit;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -25,6 +26,18 @@ public static class InfraestruturaExtensions
 
         return services;
     }
+
+    /// <summary>
+    /// Outbox transacional na publicação: <c>IPublishEndpoint.Publish</c> grava a mensagem no
+    /// PostgreSQL junto com o <c>SaveChanges</c>, e um serviço em background a entrega ao RabbitMQ.
+    /// </summary>
+    public static void AdicionarOutboxDeCampanhas(this IBusRegistrationConfigurator barramento) =>
+        barramento.AddEntityFrameworkOutbox<CampanhasDbContext>(outbox =>
+        {
+            outbox.UsePostgres();
+            outbox.UseBusOutbox();
+            outbox.QueryDelay = TimeSpan.FromSeconds(1);
+        });
 
     /// <summary>Aplica as migrations pendentes. Só a campanhas-api chama; o worker nunca migra.</summary>
     public static Task AplicarMigrationsDeCampanhasAsync(this IServiceProvider services, CancellationToken cancelamento = default) =>
