@@ -133,6 +133,9 @@ jobs:
           npx --yes newman@6.2.1 run docs/postman/conexao-solidaria.postman_collection.json
           -e docs/postman/gateway.postman_environment.json --color on
 
+      - name: Smoke test (fluxo e regras do PDF pelo gateway, conferindo a fila no RabbitMQ)
+        run: ./scripts/smoke-test.sh
+
       - name: Logs dos serviços
         if: always()
         run: docker compose logs --no-color usuarios-api campanhas-api doacoes-worker gateway | tail -n 300

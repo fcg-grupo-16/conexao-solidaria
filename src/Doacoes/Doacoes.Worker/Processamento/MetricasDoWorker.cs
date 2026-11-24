@@ -27,6 +27,12 @@ public sealed class MetricasDoWorker
             unit: "s",
             description: "Tempo entre a intenção de doação e o processamento pelo worker.",
             advice: new InstrumentAdvice<double> { HistogramBucketBoundaries = [0.05, 0.1, 0.25, 0.5, 1, 2, 5, 10, 30, 60] });
+
+        // Séries publicadas com zero desde a subida (ver MetricasDeDoacoes na campanhas-api).
+        _processadas.Add(0);
+        _valorProcessado.Add(0);
+        _rejeitadas.Add(0);
+        _duplicadas.Add(0);
     }
 
     /// <summary>Doação somada.</summary>

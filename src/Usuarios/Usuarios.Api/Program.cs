@@ -25,6 +25,9 @@ builder.Services.AddValidatorsFromAssemblyContaining<Program>();
 var app = builder.Build();
 
 app.UsarObservabilidade();
+
+// Métricas de negócio criadas já na subida: o /metrics as expõe (com zero) antes do primeiro uso.
+_ = app.Services.GetRequiredService<MetricasDeUsuarios>();
 app.UsarPadroesDeApi();
 app.UsarAutenticacaoJwt();
 app.UsarSwagger();
