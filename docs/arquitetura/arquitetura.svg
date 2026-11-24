@@ -1,0 +1,123 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1360" height="900" viewBox="0 0 1360 900" font-family="Segoe UI, Helvetica Neue, Arial, sans-serif">
+<defs>
+<marker id="seta" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#37474f"/></marker>
+<marker id="seta-roxa" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#6a1b9a"/></marker>
+<marker id="seta-marrom" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#8d6e63"/></marker>
+<marker id="seta-laranja" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#e65100"/></marker>
+</defs>
+<rect width="1360" height="900" fill="#ffffff"/>
+<text x="30" y="42" font-size="26" font-weight="700" fill="#1a237e">Conexão Solidária — arquitetura</text>
+<text x="30" y="66" font-size="14" fill="#546e7a">Microsserviços .NET 10 · mensageria assíncrona · Kubernetes (minikube) · observabilidade · CI/CD</text>
+<rect x="235" y="90" width="1105" height="710" rx="14" fill="#f5f8ff" stroke="#3f51b5" stroke-width="2" stroke-dasharray="8 6"/>
+<text x="250" y="114" font-size="13" font-weight="700" fill="#3f51b5">Kubernetes · minikube · namespace conexao-solidaria</text>
+<rect x="25" y="330" width="180" height="130" rx="10" fill="#eceff1" stroke="#455a64" stroke-width="2"/>
+<rect x="25" y="330" width="180" height="30" rx="10" fill="#455a64"/><rect x="25" y="350" width="180" height="10" fill="#455a64"/>
+<text x="115.0" y="350" font-size="15" font-weight="700" fill="#fff" text-anchor="middle">Clientes</text>
+<text x="115.0" y="380" font-size="12.5" fill="#263238" text-anchor="middle">Doador · GestorONG</text>
+<text x="115.0" y="398" font-size="12.5" fill="#263238" text-anchor="middle">Swagger / Postman</text>
+<text x="115.0" y="416" font-size="12.5" fill="#263238" text-anchor="middle">Público (painel)</text>
+<rect x="265" y="330" width="175" height="130" rx="10" fill="#e0f2f1" stroke="#00796b" stroke-width="2"/>
+<rect x="265" y="330" width="175" height="30" rx="10" fill="#00796b"/><rect x="265" y="350" width="175" height="10" fill="#00796b"/>
+<text x="352.5" y="350" font-size="15" font-weight="700" fill="#fff" text-anchor="middle">API Gateway</text>
+<text x="352.5" y="380" font-size="12.5" fill="#263238" text-anchor="middle">KrakenD 2.13</text>
+<text x="352.5" y="398" font-size="12.5" fill="#263238" text-anchor="middle">ponto único de entrada</text>
+<text x="352.5" y="416" font-size="12.5" fill="#263238" text-anchor="middle">:8088 · 2 réplicas</text>
+<rect x="510" y="140" width="230" height="120" rx="10" fill="#e3f2fd" stroke="#1565c0" stroke-width="2"/>
+<rect x="510" y="140" width="230" height="30" rx="10" fill="#1565c0"/><rect x="510" y="160" width="230" height="10" fill="#1565c0"/>
+<text x="625.0" y="160" font-size="15" font-weight="700" fill="#fff" text-anchor="middle">usuarios-api</text>
+<text x="625.0" y="190" font-size="12.5" fill="#263238" text-anchor="middle">cadastro de doador (CPF, BCrypt)</text>
+<text x="625.0" y="208" font-size="12.5" fill="#263238" text-anchor="middle">login → JWT (roles)</text>
+<text x="625.0" y="226" font-size="12.5" fill="#263238" text-anchor="middle">seed do GestorONG</text>
+<rect x="510" y="330" width="230" height="150" rx="10" fill="#e3f2fd" stroke="#1565c0" stroke-width="2"/>
+<rect x="510" y="330" width="230" height="30" rx="10" fill="#1565c0"/><rect x="510" y="350" width="230" height="10" fill="#1565c0"/>
+<text x="625.0" y="350" font-size="15" font-weight="700" fill="#fff" text-anchor="middle">campanhas-api</text>
+<text x="625.0" y="380" font-size="12.5" fill="#263238" text-anchor="middle">gestão de campanhas (GestorONG)</text>
+<text x="625.0" y="398" font-size="12.5" fill="#263238" text-anchor="middle">painel de transparência (público)</text>
+<text x="625.0" y="416" font-size="12.5" fill="#263238" text-anchor="middle">intenção de doação (Doador)</text>
+<text x="625.0" y="434" font-size="12.5" fill="#263238" text-anchor="middle">→ DoacaoRecebidaEvent (outbox)</text>
+<rect x="510" y="585" width="230" height="130" rx="10" fill="#f3e5f5" stroke="#6a1b9a" stroke-width="2"/>
+<rect x="510" y="585" width="230" height="30" rx="10" fill="#6a1b9a"/><rect x="510" y="605" width="230" height="10" fill="#6a1b9a"/>
+<text x="625.0" y="605" font-size="15" font-weight="700" fill="#fff" text-anchor="middle">RabbitMQ 3.13</text>
+<text x="625.0" y="635" font-size="12.5" fill="#263238" text-anchor="middle">exchange doacao-recebida (fanout)</text>
+<text x="625.0" y="653" font-size="12.5" fill="#263238" text-anchor="middle">fila doacoes-worker-</text>
+<text x="625.0" y="671" font-size="12.5" fill="#263238" text-anchor="middle">doacao-recebida (+ _error)</text>
+<rect x="830" y="585" width="230" height="130" rx="10" fill="#e3f2fd" stroke="#1565c0" stroke-width="2"/>
+<rect x="830" y="585" width="230" height="30" rx="10" fill="#1565c0"/><rect x="830" y="605" width="230" height="10" fill="#1565c0"/>
+<text x="945.0" y="605" font-size="15" font-weight="700" fill="#fff" text-anchor="middle">doacoes-worker</text>
+<text x="945.0" y="635" font-size="12.5" fill="#263238" text-anchor="middle">consome DoacaoRecebidaEvent</text>
+<text x="945.0" y="653" font-size="12.5" fill="#263238" text-anchor="middle">Pendente → Processada</text>
+<text x="945.0" y="671" font-size="12.5" fill="#263238" text-anchor="middle">arrecadado += valor (1 vez)</text>
+<path d="M845,142 A100.0,12 0 0,1 1045,142 L1045,228 A100.0,12 0 0,1 845,228 Z" fill="#e8f5e9" stroke="#2e7d32" stroke-width="2"/>
+<ellipse cx="945.0" cy="142" rx="100.0" ry="12" fill="#2e7d32"/>
+<text x="945.0" y="170" font-size="14" font-weight="700" fill="#2e7d32" text-anchor="middle">PostgreSQL 17</text>
+<text x="945.0" y="190" font-size="12" fill="#263238" text-anchor="middle">usuariosdb</text>
+<path d="M845,352 A100.0,12 0 0,1 1045,352 L1045,458 A100.0,12 0 0,1 845,458 Z" fill="#e8f5e9" stroke="#2e7d32" stroke-width="2"/>
+<ellipse cx="945.0" cy="352" rx="100.0" ry="12" fill="#2e7d32"/>
+<text x="945.0" y="380" font-size="14" font-weight="700" fill="#2e7d32" text-anchor="middle">PostgreSQL 17</text>
+<text x="945.0" y="400" font-size="12" fill="#263238" text-anchor="middle">campanhasdb</text>
+<text x="945.0" y="417" font-size="12" fill="#263238" text-anchor="middle">campanhas · doações</text>
+<text x="945.0" y="434" font-size="12" fill="#263238" text-anchor="middle">outbox do MassTransit</text>
+<path d="M1115,357 A95.0,12 0 0,1 1305,357 L1305,443 A95.0,12 0 0,1 1115,443 Z" fill="#ffebee" stroke="#c62828" stroke-width="2"/>
+<ellipse cx="1210.0" cy="357" rx="95.0" ry="12" fill="#c62828"/>
+<text x="1210.0" y="385" font-size="14" font-weight="700" fill="#c62828" text-anchor="middle">Redis 7</text>
+<text x="1210.0" y="405" font-size="12" fill="#263238" text-anchor="middle">cache do painel</text>
+<text x="1210.0" y="422" font-size="12" fill="#263238" text-anchor="middle">(cache-aside, TTL 30 s)</text>
+<rect x="1115" y="545" width="190" height="95" rx="10" fill="#fff3e0" stroke="#e65100" stroke-width="2"/>
+<rect x="1115" y="545" width="190" height="30" rx="10" fill="#e65100"/><rect x="1115" y="565" width="190" height="10" fill="#e65100"/>
+<text x="1210.0" y="565" font-size="15" font-weight="700" fill="#fff" text-anchor="middle">Prometheus</text>
+<text x="1210.0" y="595" font-size="12.5" fill="#263238" text-anchor="middle">scrape /metrics (3 serviços)</text>
+<text x="1210.0" y="613" font-size="12.5" fill="#263238" text-anchor="middle">RabbitMQ :15692 · cAdvisor</text>
+<rect x="1115" y="670" width="190" height="90" rx="10" fill="#fff3e0" stroke="#e65100" stroke-width="2"/>
+<rect x="1115" y="670" width="190" height="30" rx="10" fill="#e65100"/><rect x="1115" y="690" width="190" height="10" fill="#e65100"/>
+<text x="1210.0" y="690" font-size="15" font-weight="700" fill="#fff" text-anchor="middle">Grafana 12</text>
+<text x="1210.0" y="720" font-size="12.5" fill="#263238" text-anchor="middle">dashboard provisionado</text>
+<text x="1210.0" y="738" font-size="12.5" fill="#263238" text-anchor="middle">doações · fila · HTTP · CPU</text>
+<rect x="25" y="560" width="180" height="150" rx="10" fill="#eceff1" stroke="#37474f" stroke-width="2"/>
+<rect x="25" y="560" width="180" height="30" rx="10" fill="#37474f"/><rect x="25" y="580" width="180" height="10" fill="#37474f"/>
+<text x="115.0" y="580" font-size="15" font-weight="700" fill="#fff" text-anchor="middle">CI/CD</text>
+<text x="115.0" y="610" font-size="12.5" fill="#263238" text-anchor="middle">GitHub Actions</text>
+<text x="115.0" y="628" font-size="12.5" fill="#263238" text-anchor="middle">build · testes · e2e</text>
+<text x="115.0" y="646" font-size="12.5" fill="#263238" text-anchor="middle">imagens → GHCR</text>
+<text x="115.0" y="664" font-size="12.5" fill="#263238" text-anchor="middle">(tag = SHA do commit)</text>
+<path d="M205,395 L263,395" fill="none" stroke="#37474f" stroke-width="2" marker-end="url(#seta)"/>
+<text x="234" y="385" font-size="11.5" fill="#37474f" text-anchor="middle" font-weight="600" paint-order="stroke" stroke="#fff" stroke-width="4">HTTP + JWT</text>
+<path d="M440,370 L475,370 L475,200 L508,200" fill="none" stroke="#37474f" stroke-width="2" marker-end="url(#seta)"/>
+<text x="470" y="280" font-size="11.5" fill="#37474f" text-anchor="end" font-weight="600" paint-order="stroke" stroke="#fff" stroke-width="4">/api/usuarios</text>
+<text x="470" y="294" font-size="11.5" fill="#37474f" text-anchor="end" font-weight="600" paint-order="stroke" stroke="#fff" stroke-width="4">/api/auth</text>
+<path d="M440,410 L508,410" fill="none" stroke="#37474f" stroke-width="2" marker-end="url(#seta)"/>
+<text x="502" y="492" font-size="10.5" fill="#37474f" text-anchor="end" font-weight="600">/api/campanhas</text>
+<text x="502" y="506" font-size="10.5" fill="#37474f" text-anchor="end" font-weight="600">/api/doacoes</text>
+<text x="502" y="520" font-size="10.5" fill="#37474f" text-anchor="end" font-weight="600">/api/transparencia</text>
+<path d="M740,190 L843,190" fill="none" stroke="#37474f" stroke-width="2" marker-end="url(#seta)"/>
+<text x="792" y="180" font-size="11.5" fill="#37474f" text-anchor="middle" font-weight="600" paint-order="stroke" stroke="#fff" stroke-width="4">EF Core</text>
+<path d="M740,380 L843,380" fill="none" stroke="#37474f" stroke-width="2" marker-end="url(#seta)"/>
+<text x="792" y="400" font-size="10" fill="#37474f" text-anchor="middle" font-weight="600" paint-order="stroke" stroke="#fff" stroke-width="4">Pendente + evento</text>
+<text x="792" y="414" font-size="10" fill="#37474f" text-anchor="middle" font-weight="600" paint-order="stroke" stroke="#fff" stroke-width="4">(mesma transação)</text>
+<path d="M700,330 L700,300 L1210,300 L1210,343" fill="none" stroke="#37474f" stroke-width="2" marker-end="url(#seta)"/>
+<text x="1060" y="293" font-size="11.5" fill="#37474f" text-anchor="middle" font-weight="600" paint-order="stroke" stroke="#fff" stroke-width="4">painel: lê / grava cache</text>
+<path d="M625,480 L625,583" fill="none" stroke="#6a1b9a" stroke-width="2" marker-end="url(#seta-roxa)"/>
+<text x="632" y="535" font-size="11.5" fill="#6a1b9a" text-anchor="start" font-weight="600" paint-order="stroke" stroke="#fff" stroke-width="4">publica (outbox)</text>
+<path d="M740,650 L828,650" fill="none" stroke="#6a1b9a" stroke-width="2" marker-end="url(#seta-roxa)"/>
+<text x="784" y="640" font-size="11.5" fill="#6a1b9a" text-anchor="middle" font-weight="600" paint-order="stroke" stroke="#fff" stroke-width="4">consome</text>
+<path d="M945,585 L945,472" fill="none" stroke="#37474f" stroke-width="2" marker-end="url(#seta)"/>
+<text x="952" y="532" font-size="11.5" fill="#37474f" text-anchor="start" font-weight="600" paint-order="stroke" stroke="#fff" stroke-width="4">UPDATE idempotente</text>
+<path d="M1060,610 L1085,610 L1085,430 L1113,430" fill="none" stroke="#37474f" stroke-width="2" marker-end="url(#seta)"/>
+<text x="1092" y="500" font-size="10.5" fill="#37474f" text-anchor="start" font-weight="600" paint-order="stroke" stroke="#fff" stroke-width="4">invalida</text>
+<text x="1092" y="514" font-size="10.5" fill="#37474f" text-anchor="start" font-weight="600" paint-order="stroke" stroke="#fff" stroke-width="4">painel</text>
+<path d="M1210,640 L1210,668" fill="none" stroke="#e65100" stroke-width="2" marker-end="url(#seta-laranja)"/>
+<path d="M560,262 L560,328" fill="none" stroke="#8d6e63" stroke-width="2" stroke-dasharray="6 5" marker-end="url(#seta-marrom)"/>
+<text x="568" y="288" font-size="10.5" fill="#8d6e63" text-anchor="start" font-weight="600" paint-order="stroke" stroke="#fff" stroke-width="4">JWT: mesma chave</text>
+<text x="568" y="302" font-size="10.5" fill="#8d6e63" text-anchor="start" font-weight="600" paint-order="stroke" stroke="#fff" stroke-width="4">(emite → valida)</text>
+<path d="M115,712 L115,770 L260,770" fill="none" stroke="#37474f" stroke-width="2" marker-end="url(#seta)"/>
+<text x="122" y="790" font-size="10.5" fill="#37474f" text-anchor="start" font-weight="600" paint-order="stroke" stroke="#fff" stroke-width="4">deploy-minikube.sh</text>
+<text x="122" y="804" font-size="10.5" fill="#37474f" text-anchor="start" font-weight="600" paint-order="stroke" stroke="#fff" stroke-width="4">(imagem por commit)</text>
+<text x="1210" y="782" font-size="11" fill="#e65100" text-anchor="middle" font-style="italic">todos os serviços expõem /health e /metrics</text>
+<text x="30" y="835" font-size="12" font-weight="700" fill="#263238">Legenda:</text>
+<rect x="100" y="824" width="14" height="14" rx="3" fill="#1565c0"/><text x="120" y="835" font-size="12" fill="#263238">microsserviço .NET 10</text>
+<rect x="287" y="824" width="14" height="14" rx="3" fill="#2e7d32"/><text x="307" y="835" font-size="12" fill="#263238">banco de dados</text>
+<rect x="425" y="824" width="14" height="14" rx="3" fill="#c62828"/><text x="445" y="835" font-size="12" fill="#263238">cache</text>
+<rect x="500" y="824" width="14" height="14" rx="3" fill="#6a1b9a"/><text x="520" y="835" font-size="12" fill="#263238">mensageria</text>
+<rect x="610" y="824" width="14" height="14" rx="3" fill="#e65100"/><text x="630" y="835" font-size="12" fill="#263238">observabilidade</text>
+<rect x="755" y="824" width="14" height="14" rx="3" fill="#00796b"/><text x="775" y="835" font-size="12" fill="#263238">gateway</text>
+<text x="30" y="859" font-size="12" fill="#546e7a">Fluxo da doação: Doador → gateway → campanhas-api (202; doação Pendente + evento no mesmo commit) → RabbitMQ → doacoes-worker (soma ao arrecadado, exatamente uma vez) → painel público atualizado.</text>
+</svg>

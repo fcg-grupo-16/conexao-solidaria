@@ -4,60 +4,142 @@
 
 MVP da plataforma digital da ONG Esperança Solidária para gestão de campanhas de arrecadação e doações — Hackathon da pós-graduação FIAP.
 
-> Documentação completa (passo a passo para subir localmente, diagrama e justificativa dos bancos) em construção. Acompanhe o andamento no épico [#1](https://github.com/fcg-grupo-16/conexao-solidaria/issues/1).
+A plataforma permite que a ONG crie e gerencie campanhas de arrecadação, que doadores se cadastrem e doem, e que qualquer pessoa acompanhe, num painel público, quanto cada campanha já arrecadou. A doação é processada de forma **assíncrona**: a API publica um evento no RabbitMQ e um worker separado soma o valor à campanha.
 
-## Visão geral
+![Arquitetura](docs/arquitetura/arquitetura.png)
 
 | Serviço | Responsabilidade |
 |---|---|
 | `usuarios-api` | Cadastro público de doadores, login e emissão de JWT (roles `GestorONG` e `Doador`) |
-| `campanhas-api` | Gestão de campanhas, painel de transparência público e intenção de doação |
+| `campanhas-api` | Gestão de campanhas (GestorONG), painel de transparência público e intenção de doação (Doador) |
 | `doacoes-worker` | Consome `DoacaoRecebidaEvent` e atualiza o valor arrecadado da campanha |
+| `gateway` | API Gateway (KrakenD): ponto único de entrada |
 
-Infraestrutura: PostgreSQL, Redis, RabbitMQ, Prometheus, Grafana e Kubernetes (minikube).
+Infraestrutura: PostgreSQL 17, Redis 7, RabbitMQ 3.13, Prometheus, Grafana — tudo em Kubernetes (minikube).
 
-## Estrutura do repositório
+## Documentos da entrega
 
-```
-src/            código dos serviços e building blocks compartilhados
-tests/          testes de unidade e de integração
-deploy/         manifestos Kubernetes e configuração do gateway
-observability/  Prometheus e dashboards do Grafana
-scripts/        deploy no minikube, smoke test e verificação da entrega
-docs/           ADRs, diagrama, justificativa dos bancos e roteiro do vídeo
-```
+| Documento | Onde |
+|---|---|
+| Diagrama de arquitetura | [`docs/arquitetura/arquitetura.png`](docs/arquitetura/arquitetura.png) ([SVG](docs/arquitetura/arquitetura.svg)) |
+| Justificativa dos bancos de dados (PDF) | [`docs/justificativa-bancos.pdf`](docs/justificativa-bancos.pdf) |
+| Decisões de arquitetura (ADRs) | [`docs/adr/`](docs/adr/README.md) |
+| Coleção Postman | [`docs/postman/`](docs/postman/README.md) |
 
-## Rodando no Kubernetes (minikube)
+## Requisitos do PDF e onde estão atendidos
 
-Pré-requisitos: Docker, [minikube](https://minikube.sigs.k8s.io/docs/start/) e `kubectl`.
+| Requisito | Implementação |
+|---|---|
+| JWT com roles `GestorONG` e `Doador`; gestão só para o gestor | `usuarios-api` emite; `campanhas-api` valida com a mesma chave e aplica as políticas (401 sem token, 403 com role errada) |
+| Campanha com Título, Descrição, Datas, Meta e Status; término não no passado e meta > 0 | Agregado `Campanha` (`src/Campanhas/Campanhas.Domain`), `POST`/`PUT /api/campanhas` → 400 apontando o campo |
+| Cadastro público de doador: e-mail único, CPF validado, senha com BCrypt | `POST /api/usuarios`; índice único no PostgreSQL; `Cpf` valida dígitos verificadores; BCrypt |
+| Painel público só com campanhas Ativas: Título, Meta e Valor Arrecadado | `GET /api/transparencia/campanhas` (cache Redis invalidado pelo worker) |
+| Doação pelo doador logado; recusa campanha encerrada ou cancelada | `POST /api/doacoes` → 202; 422 para concluída, cancelada ou fora do prazo |
+| ≥ 2 microsserviços | `usuarios-api`, `campanhas-api`, `doacoes-worker` (+ gateway) |
+| API **não** atualiza o arrecadado; publica evento; worker consome e atualiza | Outbox do MassTransit publica `DoacaoRecebidaEvent` no exchange `doacao-recebida`; o `doacoes-worker` consome a fila `doacoes-worker-doacao-recebida` e soma de forma idempotente |
+| Kubernetes com Deployments, Services e ConfigMaps (.yaml) | [`deploy/k8s/`](deploy/k8s) |
+| `/health` ou `/metrics`; Grafana com dashboard de métricas reais | `/health/live`, `/health/ready`, `/metrics` em todos; dashboard provisionado "Conexão Solidária — Visão geral" |
+| CI em todo push na `main`: build e imagem Docker | [`.github/workflows/ci.yml`](.github/workflows/ci.yml): build, testes, ponta a ponta e imagens no GHCR |
+| Bônus: testes de unidade no CI | 150+ testes (unidade do domínio e integração com Testcontainers) rodando no CI |
+| Bônus: API Gateway | KrakenD roteando todas as rotas |
+
+## Passo a passo para subir localmente (Kubernetes)
+
+### 1. Pré-requisitos
+
+- [Docker](https://docs.docker.com/get-docker/) (Docker Desktop, OrbStack ou equivalente), com pelo menos 8 GB de memória disponíveis
+- [minikube](https://minikube.sigs.k8s.io/docs/start/) e [`kubectl`](https://kubernetes.io/docs/tasks/tools/)
+- `git`, `curl` e `jq` (os scripts usam bash; no Windows, rode pelo WSL)
+- Opcional: Postman ou Node.js (para rodar a coleção com `npx newman`)
+
+### 2. Clonar e subir o cluster
 
 ```bash
+git clone https://github.com/fcg-grupo-16/conexao-solidaria.git
+cd conexao-solidaria
 minikube start --cpus=4 --memory=8g
-./scripts/deploy-minikube.sh       # constrói as imagens (tag do commit), aplica deploy/k8s e espera tudo ficar pronto
-kubectl -n conexao-solidaria get pods
-./scripts/port-forward.sh          # expõe os serviços em localhost (Ctrl+C encerra)
 ```
 
-| Serviço | Endereço (com o port-forward) |
+### 3. Implantar a plataforma
+
+```bash
+./scripts/deploy-minikube.sh
+```
+
+O script constrói as três imagens dentro do minikube com a **tag do commit**, aplica os manifestos de [`deploy/k8s/`](deploy/k8s) (Kustomize) e espera tudo ficar pronto. A primeira execução leva alguns minutos (download das imagens base e build). Ao final:
+
+```bash
+kubectl -n conexao-solidaria get pods
+```
+
+Devem aparecer 13 pods `Running` e prontos: `usuarios-api`, `campanhas-api`, `doacoes-worker` e `gateway` (2 réplicas cada), `postgres-0`, `rabbitmq-0`, `redis`, `prometheus` e `grafana`.
+
+### 4. Acessar os serviços
+
+Em outro terminal (deixe rodando; Ctrl+C encerra):
+
+```bash
+./scripts/port-forward.sh
+```
+
+| Serviço | Endereço |
 |---|---|
 | **API Gateway** (ponto único de entrada) | http://localhost:8088 |
-| `usuarios-api` | http://localhost:5081/swagger |
-| `campanhas-api` | http://localhost:5082/swagger |
+| `usuarios-api` (Swagger) | http://localhost:5081/swagger |
+| `campanhas-api` (Swagger) | http://localhost:5082/swagger |
 | `doacoes-worker` | http://localhost:5083/health/ready |
 | RabbitMQ Management | http://localhost:15672 (`conexao` / `conexao-demo`) |
 | Grafana | http://localhost:3000 (dashboard **Conexão Solidária — Visão geral**; leitura sem login, admin `admin` / `conexao-demo`) |
 | Prometheus | http://localhost:9090 |
 
-Os manifestos ficam em [`deploy/k8s/`](deploy/k8s) (Kustomize): namespace, ConfigMaps, Secrets, PostgreSQL e RabbitMQ (StatefulSet com volume), Redis, e um Deployment + Service por serviço — APIs e worker com 2 réplicas, probes de *startup*, *readiness* e *liveness*, limites de recurso, usuário não root e sistema de arquivos somente leitura. A chave do JWT e as credenciais ficam num Secret só, referenciado por quem precisa (um valor, um lugar).
+Credenciais **de demonstração** do gestor: `gestor@esperancasolidaria.org` / `Gestor@2026`.
 
-Para provar o fluxo e conferir a entrega (com o `port-forward.sh` rodando ou não):
+### 5. Testar o fluxo
+
+**Automático** (23 verificações pelo gateway: cadastro, login, regras de negócio, doação → fila → worker → painel):
 
 ```bash
-./scripts/smoke-test.sh       # 23 verificações pelo gateway: cadastro, login, regras, doação → fila → worker → painel
-./scripts/verify-entrega.sh   # checklist do PDF contra o cluster: pods, /health, /metrics, Prometheus, Grafana, RabbitMQ, smoke test
+./scripts/smoke-test.sh
+./scripts/verify-entrega.sh   # checklist do PDF contra o cluster
 ```
 
-Para remover: `./scripts/undeploy-minikube.sh`.
+**Pelo Postman:** importe a coleção e o ambiente `gateway` de [`docs/postman/`](docs/postman/README.md) e rode em ordem, ou:
+
+```bash
+npx newman run docs/postman/conexao-solidaria.postman_collection.json -e docs/postman/gateway.postman_environment.json
+```
+
+**Pelo Swagger, passo a passo:**
+
+1. `usuarios-api` → `POST /api/usuarios`: cadastre um doador (o CPF precisa ser válido, ex.: `529.982.247-25`).
+2. `POST /api/auth/login` com o gestor e copie o `token`; na `campanhas-api`, clique em **Authorize** e cole o token.
+3. `POST /api/campanhas`: crie uma campanha com `dataFim` no futuro e `metaFinanceira` > 0.
+4. Faça login com o doador, troque o token no **Authorize** e chame `POST /api/doacoes` com o `idCampanha` e o `valorDoacao` → `202 Accepted`, status `Pendente`.
+5. No RabbitMQ Management (aba **Queues**), a fila `doacoes-worker-doacao-recebida` mostra a mensagem passando (publish/ack).
+6. `GET /api/transparencia/campanhas` (sem token): a campanha aparece com o valor arrecadado somado pelo worker.
+7. No Grafana, o dashboard mostra a doação recebida pela API e processada pelo worker, a fila e o consumo de CPU/memória dos pods.
+
+### 6. Remover
+
+```bash
+./scripts/undeploy-minikube.sh
+minikube stop
+```
+
+### Estrutura dos manifestos
+
+[`deploy/k8s/`](deploy/k8s) (Kustomize): namespace, ConfigMaps, Secrets, PostgreSQL e RabbitMQ (StatefulSet com volume), Redis, um Deployment + Service por serviço — APIs, worker e gateway com 2 réplicas, probes de *startup*, *readiness* e *liveness*, limites de recurso, usuário não root e sistema de arquivos somente leitura —, Prometheus e Grafana. A chave do JWT e as credenciais ficam num Secret só, referenciado por quem precisa (um valor, um lugar). Todos os valores versionados são **de demonstração**.
+
+## Estrutura do repositório
+
+```
+src/                    código dos serviços e building blocks compartilhados
+tests/                  testes de unidade e de integração
+deploy/k8s/             manifestos Kubernetes, gateway (krakend.json) e observabilidade (Prometheus, Grafana)
+docker-compose.yml      ambiente de desenvolvimento sem cluster
+scripts/                deploy no minikube, port-forward, smoke test, verificação da entrega, documentos
+docs/                   ADRs, diagrama, justificativa dos bancos, Postman e roteiro do vídeo
+```
 
 ## Rodando com Docker Compose (desenvolvimento)
 
@@ -90,7 +172,7 @@ A entrega roda no Kubernetes (minikube); o compose existe para desenvolvimento e
 
 ## Desenvolvimento
 
-Pré-requisitos: [.NET SDK 10](https://dotnet.microsoft.com/download) (versão fixada em `global.json`) e Docker (os testes de integração sobem PostgreSQL com Testcontainers).
+Pré-requisitos: [.NET SDK 10](https://dotnet.microsoft.com/download) (versão fixada em `global.json`) e Docker (os testes de integração sobem PostgreSQL, RabbitMQ e Redis com Testcontainers).
 
 ```bash
 dotnet build ConexaoSolidaria.slnx
@@ -108,6 +190,8 @@ dotnet ef migrations add <Nome> -p src/Campanhas/Campanhas.Infrastructure -s src
 As APIs aplicam as migrations pendentes ao iniciar (`Banco:AplicarMigrations`, padrão `true`).
 
 Versões de pacotes ficam centralizadas em `Directory.Packages.props`; os `.csproj` não declaram versão.
+
+O diagrama e o PDF da justificativa dos bancos são gerados a partir das fontes versionadas (`docs/arquitetura/gerar-diagrama.py` e `docs/justificativa-bancos.md`) com `./scripts/gerar-documentos.sh` (requer Python 3, pandoc e Chrome/Chromium).
 
 ## Endpoints
 
