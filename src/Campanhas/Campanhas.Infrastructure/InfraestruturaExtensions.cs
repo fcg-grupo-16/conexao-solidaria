@@ -1,11 +1,15 @@
+using Campanhas.Infrastructure.Painel;
 using Campanhas.Infrastructure.Persistencia;
 using ConexaoSolidaria.Observabilidade;
 using ConexaoSolidaria.Persistencia;
 using MassTransit;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Caching.StackExchangeRedis;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
+using StackExchange.Redis;
 
 namespace Campanhas.Infrastructure;
 
@@ -25,6 +29,39 @@ public static class InfraestruturaExtensions
         services.AddSingleton(TimeProvider.System);
         services.AddHealthChecks()
             .AddDbContextCheck<CampanhasDbContext>("postgresql", tags: [ObservabilidadeExtensions.TagProntidao]);
+
+        return services;
+    }
+
+    /// <summary>Nome da connection string do Redis.</summary>
+    public const string ConnectionStringRedis = "Redis";
+
+    /// <summary>
+    /// Cache do painel de transparência no Redis, o invalidador e o health check (Degraded: sem Redis o
+    /// painel segue respondendo a partir do banco). A conexão não bloqueia a subida nem falha se o Redis
+    /// estiver fora; os timeouts são curtos para a queda do cache não virar lentidão no painel.
+    /// </summary>
+    public static IServiceCollection AdicionarCacheDoPainel(this IServiceCollection services, IConfiguration configuracao)
+    {
+        var conexao = configuracao.GetConnectionString(ConnectionStringRedis)
+            ?? throw new InvalidOperationException($"ConnectionStrings:{ConnectionStringRedis} não configurada.");
+
+        var opcoesRedis = ConfigurationOptions.Parse(conexao);
+        opcoesRedis.AbortOnConnectFail = false;
+        opcoesRedis.ConnectTimeout = 2000;
+        opcoesRedis.SyncTimeout = 1000;
+        opcoesRedis.AsyncTimeout = 1000;
+
+        services.AddSingleton<IConnectionMultiplexer>(_ => ConnectionMultiplexer.Connect(opcoesRedis));
+        // Uma conexão só, compartilhada pelo cache e pelo health check.
+        services.AddStackExchangeRedisCache(_ => { });
+        services.AddOptions<RedisCacheOptions>().Configure<IConnectionMultiplexer>(
+            (cache, redis) => cache.ConnectionMultiplexerFactory = () => Task.FromResult(redis));
+        services.AddOptions<OpcoesDoPainel>().Bind(configuracao.GetSection(OpcoesDoPainel.Secao));
+        services.AddScoped<PainelDeTransparencia>();
+        services.AddSingleton<InvalidadorDoPainel>();
+        services.AddHealthChecks().AddCheck<RedisHealthCheck>(
+            "redis", failureStatus: HealthStatus.Degraded, tags: [ObservabilidadeExtensions.TagProntidao]);
 
         return services;
     }

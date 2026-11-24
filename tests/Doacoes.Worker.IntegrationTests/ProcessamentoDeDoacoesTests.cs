@@ -1,7 +1,10 @@
 using System.Net;
 using Campanhas.Domain;
 using ConexaoSolidaria.Contracts.Eventos;
+using Campanhas.Infrastructure.Painel;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Distributed;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Doacoes.Worker.IntegrationTests;
 
@@ -107,13 +110,27 @@ public class ProcessamentoDeDoacoesTests(WorkerFactory worker)
     }
 
     [Fact]
+    public async Task Processar_doacao_invalida_o_cache_do_painel()
+    {
+        var cache = worker.Services.GetRequiredService<IDistributedCache>();
+        await cache.SetStringAsync(PainelDeTransparencia.ChaveDoCache, "[]", Cancelamento);
+        var (_, doacao) = await worker.DoacaoPendenteAsync(12m);
+
+        await worker.PublicarAsync(EventoDe(doacao));
+        await worker.EsperarAsync(async b => (await b.Doacoes.AsNoTracking().SingleAsync(d => d.Id == doacao.Id)).Status == StatusDoacao.Processada);
+
+        (await worker.EsperarAsync(async _ => await cache.GetAsync(PainelDeTransparencia.ChaveDoCache) is null, TimeSpan.FromSeconds(5)))
+            .Should().BeTrue("o worker invalida o painel depois do commit");
+    }
+
+    [Fact]
     public async Task Prontidao_reporta_postgresql_e_rabbitmq()
     {
         var resposta = await worker.CreateClient().GetAsync("/health/ready", Cancelamento);
         var corpo = await resposta.Content.ReadAsStringAsync(Cancelamento);
 
         resposta.StatusCode.Should().Be(HttpStatusCode.OK, corpo);
-        corpo.Should().Contain("postgresql").And.Contain("rabbitmq");
+        corpo.Should().Contain("postgresql").And.Contain("rabbitmq").And.Contain("redis");
     }
 
     [Fact]

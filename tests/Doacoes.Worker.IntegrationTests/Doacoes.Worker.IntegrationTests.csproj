@@ -8,6 +8,7 @@
     <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" />
     <PackageReference Include="Testcontainers.PostgreSql" />
     <PackageReference Include="Testcontainers.RabbitMq" />
+    <PackageReference Include="Testcontainers.Redis" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\src\Doacoes\Doacoes.Worker\Doacoes.Worker.csproj" />

@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
 using Testcontainers.PostgreSql;
 using Testcontainers.RabbitMq;
+using Testcontainers.Redis;
 
 [assembly: AssemblyFixture(typeof(Campanhas.IntegrationTests.CampanhasApiFactory))]
 
@@ -21,6 +22,7 @@ public sealed class CampanhasApiFactory : WebApplicationFactory<Program>, IAsync
         .Build();
 
     private readonly RabbitMqContainer _rabbit = new RabbitMqBuilder("rabbitmq:3.13-management-alpine").Build();
+    private readonly RedisContainer _redis = new RedisBuilder("redis:7.4-alpine").Build();
 
     /// <summary>URI AMQP do broker de teste.</summary>
     public Uri RabbitMqUri => new(_rabbit.GetConnectionString());
@@ -48,7 +50,7 @@ public sealed class CampanhasApiFactory : WebApplicationFactory<Program>, IAsync
     /// <inheritdoc />
     public async ValueTask InitializeAsync()
     {
-        await Task.WhenAll(_postgres.StartAsync(), _rabbit.StartAsync());
+        await Task.WhenAll(_postgres.StartAsync(), _rabbit.StartAsync(), _redis.StartAsync());
         // Migra já aqui: testes de persistência usam o banco antes de a API ser criada.
         await using var banco = NovoContexto();
         await banco.Database.MigrateAsync();
@@ -64,6 +66,7 @@ public sealed class CampanhasApiFactory : WebApplicationFactory<Program>, IAsync
         builder.UseSetting("RabbitMq:Porta", RabbitMqUri.Port.ToString(System.Globalization.CultureInfo.InvariantCulture));
         builder.UseSetting("RabbitMq:Usuario", "rabbitmq");
         builder.UseSetting("RabbitMq:Senha", "rabbitmq");
+        builder.UseSetting("ConnectionStrings:Redis", _redis.GetConnectionString());
     }
 
     /// <inheritdoc />
@@ -72,5 +75,6 @@ public sealed class CampanhasApiFactory : WebApplicationFactory<Program>, IAsync
         await base.DisposeAsync();
         await _postgres.DisposeAsync();
         await _rabbit.DisposeAsync();
+        await _redis.DisposeAsync();
     }
 }

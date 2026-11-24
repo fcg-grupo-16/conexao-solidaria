@@ -1,4 +1,5 @@
 using Campanhas.Domain;
+using Campanhas.Infrastructure.Painel;
 using Campanhas.Infrastructure.Persistencia;
 using ConexaoSolidaria.Web;
 using Microsoft.AspNetCore.Http.HttpResults;
@@ -40,7 +41,7 @@ public static class GestaoEndpoints
     }
 
     private static async Task<Results<Created<CampanhaResponse>, ValidationProblem>> CriarAsync(
-        CriarCampanhaRequest requisicao, CampanhasDbContext banco, TimeProvider relogio, CancellationToken cancelamento)
+        CriarCampanhaRequest requisicao, CampanhasDbContext banco, TimeProvider relogio, InvalidadorDoPainel painel, CancellationToken cancelamento)
     {
         var resultado = Campanha.Criar(
             requisicao.Titulo,
@@ -58,11 +59,12 @@ public static class GestaoEndpoints
 
         banco.Campanhas.Add(resultado.Valor);
         await banco.SaveChangesAsync(cancelamento);
+        await painel.InvalidarAsync(cancelamento);
         return TypedResults.Created($"/api/campanhas/{resultado.Valor.Id}", CampanhaResponse.De(resultado.Valor));
     }
 
     private static async Task<Results<Ok<CampanhaResponse>, NotFound, ValidationProblem>> EditarAsync(
-        Guid id, EditarCampanhaRequest requisicao, CampanhasDbContext banco, TimeProvider relogio, CancellationToken cancelamento)
+        Guid id, EditarCampanhaRequest requisicao, CampanhasDbContext banco, TimeProvider relogio, InvalidadorDoPainel painel, CancellationToken cancelamento)
     {
         var campanha = await banco.Campanhas.SingleOrDefaultAsync(c => c.Id == id, cancelamento);
         if (campanha is null)
@@ -87,6 +89,7 @@ public static class GestaoEndpoints
         // Só as colunas alteradas entram no UPDATE: o valor arrecadado, que o worker incrementa em
         // paralelo, não é sobrescrito pela edição.
         await banco.SaveChangesAsync(cancelamento);
+        await painel.InvalidarAsync(cancelamento);
         return TypedResults.Ok(CampanhaResponse.De(campanha));
     }
 
