@@ -6,6 +6,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
+using OpenTelemetry.Trace;
 using Serilog;
 using Serilog.Events;
 using Serilog.Formatting.Compact;
@@ -21,6 +22,9 @@ public static class ObservabilidadeExtensions
     /// Tag dos health checks que entram na prontidão (<c>/health/ready</c>): as dependências do serviço.
     /// </summary>
     public const string TagProntidao = "ready";
+
+    // Nome da ActivitySource do MassTransit (string, para este building block não depender dele).
+    private const string FonteDoMassTransit = "MassTransit";
 
     private static readonly string[] RotasDeInfraestrutura = ["/health", "/metrics"];
 
@@ -65,7 +69,15 @@ public static class ObservabilidadeExtensions
                 {
                     metricas.AddMeter(medidor);
                 }
-            });
+            })
+            // Sem exportador: o tracing existe para que cada requisição e cada mensagem tenha um
+            // TraceId (o MassTransit só cria atividades quando alguém as escuta). O Serilog grava esse
+            // TraceId em todo log, e o MassTransit o propaga no cabeçalho da mensagem, então a doação
+            // na API e o processamento no worker aparecem com o mesmo TraceId.
+            .WithTracing(rastreamento => rastreamento
+                .AddAspNetCoreInstrumentation(opcoes => opcoes.Filter = contexto => !EhRotaDeInfraestrutura(contexto.Request.Path))
+                .AddHttpClientInstrumentation()
+                .AddSource(FonteDoMassTransit));
 
         return builder;
     }

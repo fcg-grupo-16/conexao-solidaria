@@ -1,0 +1,130 @@
+# Ambiente de DESENVOLVIMENTO: sobe a plataforma inteira sem cluster.
+# A entrega (e o vídeo) usam o Kubernetes em deploy/k8s; os dois ambientes têm as mesmas variáveis.
+#
+#   docker compose up --build -d
+#   docker compose ps          # tudo "healthy"/"running"
+#   docker compose down -v     # derruba e apaga os volumes
+#
+# Todos os valores abaixo são de DEMONSTRAÇÃO. Nunca use em produção.
+
+x-jwt: &jwt
+  Jwt__Issuer: ConexaoSolidaria
+  Jwt__Audience: ConexaoSolidaria
+  Jwt__ChaveSecreta: chave-de-demonstracao-conexao-solidaria-2026-nao-usar-em-producao
+
+x-rabbitmq: &rabbitmq
+  RabbitMq__Host: rabbitmq
+  RabbitMq__Porta: "5672"
+  RabbitMq__VirtualHost: /
+  RabbitMq__Usuario: conexao
+  RabbitMq__Senha: conexao-demo
+
+x-servico: &servico
+  restart: unless-stopped
+  environment: &ambiente-base
+    ASPNETCORE_ENVIRONMENT: Production
+
+services:
+  postgres:
+    image: postgres:17.6-alpine
+    environment:
+      POSTGRES_USER: conexao
+      POSTGRES_PASSWORD: conexao-demo
+      POSTGRES_DB: postgres
+    volumes:
+      - postgres-dados:/var/lib/postgresql/data
+      - ./docker/postgres:/docker-entrypoint-initdb.d:ro
+    ports:
+      - "127.0.0.1:15432:5432"   # só para inspeção local; os serviços usam a rede interna
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U conexao -d campanhasdb"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  rabbitmq:
+    image: rabbitmq:3.13.7-management-alpine
+    environment:
+      RABBITMQ_DEFAULT_USER: conexao
+      RABBITMQ_DEFAULT_PASS: conexao-demo
+    ports:
+      - "5672:5672"
+      - "15672:15672"   # RabbitMQ Management (http://localhost:15672)
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "check_port_connectivity"]
+      interval: 10s
+      timeout: 10s
+      retries: 12
+
+  redis:
+    image: redis:7.4.5-alpine
+    command: ["redis-server", "--save", "", "--appendonly", "no"]   # cache: sem persistência
+    ports:
+      - "127.0.0.1:16379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  usuarios-api:
+    <<: *servico
+    build:
+      context: .
+      dockerfile: src/Usuarios/Usuarios.Api/Dockerfile
+    image: conexao-solidaria/usuarios-api:dev
+    environment:
+      <<: [*ambiente-base, *jwt]
+      ConnectionStrings__UsuariosDb: Host=postgres;Database=usuariosdb;Username=conexao;Password=conexao-demo
+      GestorInicial__NomeCompleto: Gestora Esperança Solidária
+      GestorInicial__Email: gestor@esperancasolidaria.org
+      GestorInicial__Cpf: 111.444.777-35
+      GestorInicial__Senha: Gestor@2026
+    ports:
+      - "5081:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  campanhas-api:
+    <<: *servico
+    build:
+      context: .
+      dockerfile: src/Campanhas/Campanhas.Api/Dockerfile
+    image: conexao-solidaria/campanhas-api:dev
+    environment:
+      <<: [*ambiente-base, *jwt, *rabbitmq]
+      ConnectionStrings__CampanhasDb: Host=postgres;Database=campanhasdb;Username=conexao;Password=conexao-demo
+      ConnectionStrings__Redis: redis:6379
+    ports:
+      - "5082:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  doacoes-worker:
+    <<: *servico
+    build:
+      context: .
+      dockerfile: src/Doacoes/Doacoes.Worker/Dockerfile
+    image: conexao-solidaria/doacoes-worker:dev
+    environment:
+      <<: [*ambiente-base, *rabbitmq]
+      ConnectionStrings__CampanhasDb: Host=postgres;Database=campanhasdb;Username=conexao;Password=conexao-demo
+      ConnectionStrings__Redis: redis:6379
+    ports:
+      - "5083:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+volumes:
+  postgres-dados:

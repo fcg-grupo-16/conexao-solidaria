@@ -27,6 +27,34 @@ scripts/        deploy no minikube, smoke test e verificação da entrega
 docs/           ADRs, diagrama, justificativa dos bancos e roteiro do vídeo
 ```
 
+## Rodando com Docker Compose (desenvolvimento)
+
+Pré-requisito: Docker. Sobe PostgreSQL, RabbitMQ, Redis e os três serviços:
+
+```bash
+docker compose up --build -d
+docker compose ps          # infraestrutura "healthy" e serviços "running"
+```
+
+| Serviço | Endereço |
+|---|---|
+| `usuarios-api` | http://localhost:5081/swagger |
+| `campanhas-api` | http://localhost:5082/swagger |
+| `doacoes-worker` | http://localhost:5083/health/ready |
+| RabbitMQ Management | http://localhost:15672 (`conexao` / `conexao-demo`) |
+| PostgreSQL | `localhost:15432` (`conexao` / `conexao-demo`) |
+| Redis | `localhost:16379` |
+
+Gestor de demonstração: `gestor@esperancasolidaria.org` / `Gestor@2026`. Para exercitar o fluxo inteiro:
+
+```bash
+npx newman run docs/postman/conexao-solidaria.postman_collection.json -e docs/postman/local.postman_environment.json
+```
+
+Para derrubar e apagar os dados: `docker compose down -v`. Todas as credenciais versionadas são **de demonstração**.
+
+A entrega roda no Kubernetes (minikube); o compose existe para desenvolvimento e usa as mesmas variáveis de ambiente dos manifestos.
+
 ## Desenvolvimento
 
 Pré-requisitos: [.NET SDK 10](https://dotnet.microsoft.com/download) (versão fixada em `global.json`) e Docker (os testes de integração sobem PostgreSQL com Testcontainers).
