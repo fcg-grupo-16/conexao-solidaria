@@ -10,6 +10,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Testcontainers.PostgreSql;
 using Testcontainers.RabbitMq;
+using Testcontainers.Redis;
 
 [assembly: AssemblyFixture(typeof(Doacoes.Worker.IntegrationTests.WorkerFactory))]
 
@@ -23,6 +24,7 @@ public sealed class WorkerFactory : WebApplicationFactory<Program>, IAsyncLifeti
 {
     private readonly PostgreSqlContainer _postgres = new PostgreSqlBuilder("postgres:17-alpine").WithDatabase("campanhasdb").Build();
     private readonly RabbitMqContainer _rabbit = new RabbitMqBuilder("rabbitmq:3.13-management-alpine").Build();
+    private readonly RedisContainer _redis = new RedisBuilder("redis:7.4-alpine").Build();
 
     /// <summary>Novo contexto apontando para o container.</summary>
     public CampanhasDbContext NovoContexto()
@@ -81,7 +83,7 @@ public sealed class WorkerFactory : WebApplicationFactory<Program>, IAsyncLifeti
     /// <inheritdoc />
     public async ValueTask InitializeAsync()
     {
-        await Task.WhenAll(_postgres.StartAsync(), _rabbit.StartAsync());
+        await Task.WhenAll(_postgres.StartAsync(), _rabbit.StartAsync(), _redis.StartAsync());
         await using var banco = NovoContexto();
         await banco.Database.MigrateAsync();
         // Força a criação do host: o worker só consome depois de subir.
@@ -98,6 +100,7 @@ public sealed class WorkerFactory : WebApplicationFactory<Program>, IAsyncLifeti
         builder.UseSetting("RabbitMq:Porta", rabbit.Port.ToString(CultureInfo.InvariantCulture));
         builder.UseSetting("RabbitMq:Usuario", "rabbitmq");
         builder.UseSetting("RabbitMq:Senha", "rabbitmq");
+        builder.UseSetting("ConnectionStrings:Redis", _redis.GetConnectionString());
         builder.UseSetting("Banco:SegundosParaAguardarEsquema", "30");
     }
 
@@ -107,5 +110,6 @@ public sealed class WorkerFactory : WebApplicationFactory<Program>, IAsyncLifeti
         await base.DisposeAsync();
         await _postgres.DisposeAsync();
         await _rabbit.DisposeAsync();
+        await _redis.DisposeAsync();
     }
 }

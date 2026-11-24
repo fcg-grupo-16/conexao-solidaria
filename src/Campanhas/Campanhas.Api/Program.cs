@@ -1,5 +1,6 @@
 using Campanhas.Api.Doacoes;
 using Campanhas.Api.Gestao;
+using Campanhas.Api.Transparencia;
 using Campanhas.Infrastructure;
 using ConexaoSolidaria.Mensageria;
 using ConexaoSolidaria.Observabilidade;
@@ -11,6 +12,7 @@ builder.AdicionarObservabilidade("campanhas-api", MetricasDeDoacoes.NomeMedidor)
 builder.AdicionarPadroesDeApi();
 builder.AdicionarAutenticacaoJwt();
 builder.Services.AdicionarBancoDeCampanhas(builder.Configuration);
+builder.Services.AdicionarCacheDoPainel(builder.Configuration);
 builder.Services.AdicionarMensageria(
     builder.Configuration,
     prefixoDasFilas: "campanhas-api",
@@ -31,6 +33,7 @@ if (app.Configuration.GetValue("Banco:AplicarMigrations", true))
 
 app.MapGestaoEndpoints();
 app.MapDoacoesEndpoints();
+app.MapTransparenciaEndpoints();
 
 await app.RunAsync();
 

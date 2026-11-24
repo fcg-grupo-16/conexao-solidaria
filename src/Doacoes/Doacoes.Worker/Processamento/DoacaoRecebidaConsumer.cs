@@ -1,4 +1,5 @@
 using Campanhas.Domain;
+using Campanhas.Infrastructure.Painel;
 using Campanhas.Infrastructure.Persistencia;
 using ConexaoSolidaria.Contracts.Eventos;
 using MassTransit;
@@ -18,6 +19,7 @@ namespace Doacoes.Worker.Processamento;
 public sealed class DoacaoRecebidaConsumer(
     CampanhasDbContext banco,
     TimeProvider relogio,
+    InvalidadorDoPainel painel,
     MetricasDoWorker metricas,
     ILogger<DoacaoRecebidaConsumer> log) : IConsumer<DoacaoRecebidaEvent>
 {
@@ -88,6 +90,9 @@ public sealed class DoacaoRecebidaConsumer(
             .ExecuteUpdateAsync(s => s.SetProperty(c => c.ValorArrecadado, c => c.ValorArrecadado + evento.Valor), cancelamento);
 
         await transacao.CommitAsync(cancelamento);
+
+        // Depois do commit: o painel público passa a mostrar o valor novo na próxima leitura.
+        await painel.InvalidarAsync(cancelamento);
 
         metricas.Processada(evento.Valor, agora - evento.OcorridoEm);
         log.LogInformation(
