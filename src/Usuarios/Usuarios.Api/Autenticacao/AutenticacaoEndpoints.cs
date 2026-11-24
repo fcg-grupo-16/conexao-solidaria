@@ -57,6 +57,7 @@ public static class AutenticacaoEndpoints
         UsuariosDbContext banco,
         IHasherDeSenha hasher,
         EmissorDeToken emissor,
+        MetricasDeUsuarios metricas,
         CancellationToken cancelamento)
     {
         var email = Usuario.NormalizarEmail(requisicao.Email);
@@ -66,6 +67,7 @@ public static class AutenticacaoEndpoints
         if (usuario is null || !senhaConfere)
         {
             // Mesma resposta para e-mail inexistente e senha errada.
+            metricas.LoginRecusado();
             return TypedResults.Problem(
                 title: "Não autorizado",
                 detail: "E-mail ou senha inválidos.",
@@ -73,6 +75,7 @@ public static class AutenticacaoEndpoints
         }
 
         var token = emissor.Emitir(usuario);
+        metricas.LoginAceito(usuario.Perfil.ToString());
         return TypedResults.Ok(new LoginResponse(token.Token, "Bearer", token.ExpiraEm, usuario.Perfil));
     }
 }

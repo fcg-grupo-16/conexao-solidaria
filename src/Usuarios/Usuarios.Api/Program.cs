@@ -1,6 +1,7 @@
 using ConexaoSolidaria.Observabilidade;
 using ConexaoSolidaria.Web;
 using FluentValidation;
+using Usuarios.Api;
 using Usuarios.Api.Autenticacao;
 using Usuarios.Api.Cadastro;
 using Usuarios.Api.Consulta;
@@ -9,11 +10,12 @@ using Usuarios.Infrastructure.Seed;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.AdicionarObservabilidade("usuarios-api");
+builder.AdicionarObservabilidade("usuarios-api", MetricasDeUsuarios.NomeMedidor);
 builder.AdicionarPadroesDeApi();
 builder.AdicionarAutenticacaoJwt();
 builder.Services.AdicionarInfraestruturaDeUsuarios(builder.Configuration);
 builder.Services.AddSingleton<EmissorDeToken>();
+builder.Services.AddSingleton<MetricasDeUsuarios>();
 builder.Services.AddValidatorsFromAssemblyContaining<Program>();
 
 var app = builder.Build();

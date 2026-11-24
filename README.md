@@ -74,6 +74,28 @@ A doação é assíncrona: a `campanhas-api` grava a doação como `Pendente` e 
 
 Todos os serviços expõem `/health/live`, `/health/ready` e `/metrics` (Prometheus).
 
+## Observabilidade
+
+Cada serviço expõe:
+
+| Endpoint | Para quê |
+|---|---|
+| `/health/live` | O processo responde (probe de *liveness*; não consulta dependências) |
+| `/health/ready` | Dependências: PostgreSQL, RabbitMQ e Redis conforme o serviço (probe de *readiness*; `503` se uma dependência essencial cair) |
+| `/metrics` | Métricas no formato Prometheus (OpenTelemetry) |
+
+Métricas de negócio, além das HTTP (`http_server_request_duration_seconds`), do runtime .NET e do MassTransit:
+
+| Serviço | Métrica |
+|---|---|
+| `usuarios-api` | `usuarios_cadastrados_total`, `usuarios_logins_total{resultado,perfil}` |
+| `campanhas-api` | `doacoes_recebidas_total`, `doacoes_valor_recebido_BRL_total`, `doacoes_recusadas_total{motivo}` |
+| `doacoes-worker` | `doacoes_processadas_total`, `doacoes_rejeitadas_total`, `doacoes_reentregas_ignoradas_total`, `doacoes_valor_processado_BRL_total`, `doacoes_atraso_processamento_seconds` |
+
+Na prontidão, a queda do RabbitMQ ou do Redis deixa a `campanhas-api` como `Degraded` (o outbox guarda as doações e o painel lê do banco) e o `doacoes-worker` como `Unhealthy` (sem broker ele não trabalha).
+
+Os logs são JSON (Serilog) com o `TraceId` da requisição; o MassTransit propaga o contexto, então a doação na API e o processamento no worker compartilham o mesmo trace.
+
 ## Decisões de arquitetura
 
 As decisões estão registradas como ADRs em [`docs/adr/`](docs/adr/README.md): monorepo, bancos de dados (PostgreSQL + Redis), mensageria (RabbitMQ + MassTransit com outbox) e observabilidade.

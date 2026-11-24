@@ -8,7 +8,7 @@ using ConexaoSolidaria.Web;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.AdicionarObservabilidade("campanhas-api", MetricasDeDoacoes.NomeMedidor);
+builder.AdicionarObservabilidade("campanhas-api", MetricasDeDoacoes.NomeMedidor, MensageriaExtensions.MedidorDoMassTransit);
 builder.AdicionarPadroesDeApi();
 builder.AdicionarAutenticacaoJwt();
 builder.Services.AdicionarBancoDeCampanhas(builder.Configuration);
