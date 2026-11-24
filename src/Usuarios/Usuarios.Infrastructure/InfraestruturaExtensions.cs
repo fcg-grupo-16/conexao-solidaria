@@ -5,6 +5,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Usuarios.Domain;
 using Usuarios.Infrastructure.Persistencia;
+using Usuarios.Infrastructure.Seed;
 using Usuarios.Infrastructure.Seguranca;
 
 namespace Usuarios.Infrastructure;
@@ -24,6 +25,7 @@ public static class InfraestruturaExtensions
         services.AddDbContext<UsuariosDbContext>(opcoes => ConfigurarBanco(opcoes, conexao));
         services.AddOptions<OpcoesDeSenha>().Bind(configuracao.GetSection(OpcoesDeSenha.Secao));
         services.AddSingleton<IHasherDeSenha, BCryptHasherDeSenha>();
+        services.AddOptions<OpcoesGestorInicial>().Bind(configuracao.GetSection(OpcoesGestorInicial.Secao));
         services.AddSingleton(TimeProvider.System);
         services.AddHealthChecks()
             .AddDbContextCheck<UsuariosDbContext>("postgresql", tags: [ObservabilidadeExtensions.TagProntidao]);
