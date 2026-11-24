@@ -33,4 +33,6 @@ jobs:
         run: dotnet build ConexaoSolidaria.slnx -c Release --no-restore
 
       - name: Testes
-        run: dotnet test --solution ConexaoSolidaria.slnx -c Release --no-build
+        # Um módulo de teste por vez: os de integração sobem PostgreSQL e RabbitMQ (Testcontainers), e
+        # vários brokers subindo juntos competem pela máquina e atrasam o handshake AMQP.
+        run: dotnet test --solution ConexaoSolidaria.slnx -c Release --no-build --max-parallel-test-modules 1

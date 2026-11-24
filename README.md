@@ -33,7 +33,7 @@ Pré-requisitos: [.NET SDK 10](https://dotnet.microsoft.com/download) (versão f
 
 ```bash
 dotnet build ConexaoSolidaria.slnx
-dotnet test --solution ConexaoSolidaria.slnx
+dotnet test --solution ConexaoSolidaria.slnx --max-parallel-test-modules 1
 ```
 
 Migrations do EF Core (ferramenta local fixada em `.config/dotnet-tools.json`):
@@ -64,6 +64,8 @@ Versões de pacotes ficam centralizadas em `Directory.Packages.props`; os `.cspr
 | `GET` | `/api/doacoes/{id}` | `Doador` (própria) ou `GestorONG` | `campanhas-api` | Status do processamento (`Pendente`, `Processada`, `Rejeitada`) |
 
 O único `GestorONG` nasce do seed de configuração (`GestorInicial:*`); o cadastro público só cria doadores. A chave, o emissor e o público do JWT (`Jwt:*`) são os mesmos na `usuarios-api`, que emite, e na `campanhas-api`, que valida.
+
+O `doacoes-worker` consome a fila `doacoes-worker-doacao-recebida`, soma o valor ao arrecadado da campanha **exatamente uma vez** (a transição `Pendente → Processada` é a guarda, na mesma transação do incremento atômico) e marca a doação como `Processada`, ou `Rejeitada` se a campanha foi cancelada ou concluída antes do processamento. Falhas transitórias são retentadas; as persistentes vão para a fila `_error`.
 
 A doação é assíncrona: a `campanhas-api` grava a doação como `Pendente` e o `DoacaoRecebidaEvent` no mesmo commit (outbox do MassTransit), e o evento é entregue no exchange `doacao-recebida` do RabbitMQ. A API **não** altera o valor arrecadado.
 
