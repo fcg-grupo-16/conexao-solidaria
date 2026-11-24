@@ -126,5 +126,16 @@ services:
       redis:
         condition: service_healthy
 
+  gateway:
+    image: krakend:2.13.11
+    command: ["run", "-c", "/etc/krakend/krakend.json"]
+    volumes:
+      - ./deploy/k8s/gateway/krakend.json:/etc/krakend/krakend.json:ro   # mesma config do Kubernetes
+    ports:
+      - "8088:8080"   # ponto único de entrada: http://localhost:8088
+    depends_on:
+      - usuarios-api
+      - campanhas-api
+
 volumes:
   postgres-dados:

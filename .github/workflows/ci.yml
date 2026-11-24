@@ -88,6 +88,9 @@ jobs:
       - name: Scripts (shellcheck)
         run: shellcheck scripts/*.sh
 
+      - name: Configuração do API Gateway (krakend check)
+        run: docker run --rm -v "$PWD/deploy/k8s/gateway:/etc/krakend:ro" krakend:2.13.11 check -t -c /etc/krakend/krakend.json
+
   ponta-a-ponta:
     name: Ponta a ponta (docker compose)
     runs-on: ubuntu-latest
@@ -103,10 +106,12 @@ jobs:
 
       - name: Subir os serviços
         run: |
-          docker compose up --build --detach usuarios-api campanhas-api doacoes-worker
-          for porta in 5081 5082 5083; do
+          docker compose up --build --detach usuarios-api campanhas-api doacoes-worker gateway
+          for porta in 5081 5082 5083 8088; do
             for tentativa in $(seq 1 60); do
-              if curl -fsS "http://localhost:${porta}/health/ready" > /dev/null; then
+              caminho=/health/ready
+              [ "$porta" = 8088 ] && caminho=/__health
+              if curl -fsS "http://localhost:${porta}${caminho}" > /dev/null; then
                 echo "porta ${porta} pronta"
                 break
               fi
@@ -118,14 +123,19 @@ jobs:
             done
           done
 
-      - name: Fluxo completo (coleção Postman)
+      - name: Fluxo completo direto nos serviços (coleção Postman)
         run: >-
           npx --yes newman@6.2.1 run docs/postman/conexao-solidaria.postman_collection.json
           -e docs/postman/local.postman_environment.json --color on
 
+      - name: Fluxo completo pelo API Gateway (coleção Postman)
+        run: >-
+          npx --yes newman@6.2.1 run docs/postman/conexao-solidaria.postman_collection.json
+          -e docs/postman/gateway.postman_environment.json --color on
+
       - name: Logs dos serviços
         if: always()
-        run: docker compose logs --no-color usuarios-api campanhas-api doacoes-worker | tail -n 300
+        run: docker compose logs --no-color usuarios-api campanhas-api doacoes-worker gateway | tail -n 300
 
       - name: Derrubar
         if: always()

@@ -1,0 +1,244 @@
+{
+  "$schema": "https://www.krakend.io/schema/v2.13/krakend.json",
+  "version": 3,
+  "name": "Conexão Solidária — API Gateway",
+  "port": 8080,
+  "timeout": "10s",
+  "cache_ttl": "0s",
+  "output_encoding": "no-op",
+  "extra_config": {
+    "router": {
+      "return_error_msg": true
+    },
+    "telemetry/logging": {
+      "level": "WARNING",
+      "prefix": "[GATEWAY]",
+      "stdout": true
+    }
+  },
+  "endpoints": [
+    {
+      "endpoint": "/api/usuarios",
+      "method": "POST",
+      "output_encoding": "no-op",
+      "input_headers": [
+        "Authorization",
+        "Content-Type",
+        "Accept"
+      ],
+      "backend": [
+        {
+          "url_pattern": "/api/usuarios",
+          "method": "POST",
+          "host": [
+            "http://usuarios-api:8080"
+          ],
+          "encoding": "no-op"
+        }
+      ]
+    },
+    {
+      "endpoint": "/api/auth/login",
+      "method": "POST",
+      "output_encoding": "no-op",
+      "input_headers": [
+        "Authorization",
+        "Content-Type",
+        "Accept"
+      ],
+      "backend": [
+        {
+          "url_pattern": "/api/auth/login",
+          "method": "POST",
+          "host": [
+            "http://usuarios-api:8080"
+          ],
+          "encoding": "no-op"
+        }
+      ]
+    },
+    {
+      "endpoint": "/api/usuarios/me",
+      "method": "GET",
+      "output_encoding": "no-op",
+      "input_headers": [
+        "Authorization",
+        "Content-Type",
+        "Accept"
+      ],
+      "backend": [
+        {
+          "url_pattern": "/api/usuarios/me",
+          "method": "GET",
+          "host": [
+            "http://usuarios-api:8080"
+          ],
+          "encoding": "no-op"
+        }
+      ]
+    },
+    {
+      "endpoint": "/api/usuarios/{id}",
+      "method": "GET",
+      "output_encoding": "no-op",
+      "input_headers": [
+        "Authorization",
+        "Content-Type",
+        "Accept"
+      ],
+      "backend": [
+        {
+          "url_pattern": "/api/usuarios/{id}",
+          "method": "GET",
+          "host": [
+            "http://usuarios-api:8080"
+          ],
+          "encoding": "no-op"
+        }
+      ]
+    },
+    {
+      "endpoint": "/api/campanhas",
+      "method": "POST",
+      "output_encoding": "no-op",
+      "input_headers": [
+        "Authorization",
+        "Content-Type",
+        "Accept"
+      ],
+      "backend": [
+        {
+          "url_pattern": "/api/campanhas",
+          "method": "POST",
+          "host": [
+            "http://campanhas-api:8080"
+          ],
+          "encoding": "no-op"
+        }
+      ]
+    },
+    {
+      "endpoint": "/api/campanhas",
+      "method": "GET",
+      "output_encoding": "no-op",
+      "input_headers": [
+        "Authorization",
+        "Content-Type",
+        "Accept"
+      ],
+      "backend": [
+        {
+          "url_pattern": "/api/campanhas",
+          "method": "GET",
+          "host": [
+            "http://campanhas-api:8080"
+          ],
+          "encoding": "no-op"
+        }
+      ],
+      "input_query_strings": [
+        "status"
+      ]
+    },
+    {
+      "endpoint": "/api/campanhas/{id}",
+      "method": "GET",
+      "output_encoding": "no-op",
+      "input_headers": [
+        "Authorization",
+        "Content-Type",
+        "Accept"
+      ],
+      "backend": [
+        {
+          "url_pattern": "/api/campanhas/{id}",
+          "method": "GET",
+          "host": [
+            "http://campanhas-api:8080"
+          ],
+          "encoding": "no-op"
+        }
+      ]
+    },
+    {
+      "endpoint": "/api/campanhas/{id}",
+      "method": "PUT",
+      "output_encoding": "no-op",
+      "input_headers": [
+        "Authorization",
+        "Content-Type",
+        "Accept"
+      ],
+      "backend": [
+        {
+          "url_pattern": "/api/campanhas/{id}",
+          "method": "PUT",
+          "host": [
+            "http://campanhas-api:8080"
+          ],
+          "encoding": "no-op"
+        }
+      ]
+    },
+    {
+      "endpoint": "/api/doacoes",
+      "method": "POST",
+      "output_encoding": "no-op",
+      "input_headers": [
+        "Authorization",
+        "Content-Type",
+        "Accept"
+      ],
+      "backend": [
+        {
+          "url_pattern": "/api/doacoes",
+          "method": "POST",
+          "host": [
+            "http://campanhas-api:8080"
+          ],
+          "encoding": "no-op"
+        }
+      ]
+    },
+    {
+      "endpoint": "/api/doacoes/{id}",
+      "method": "GET",
+      "output_encoding": "no-op",
+      "input_headers": [
+        "Authorization",
+        "Content-Type",
+        "Accept"
+      ],
+      "backend": [
+        {
+          "url_pattern": "/api/doacoes/{id}",
+          "method": "GET",
+          "host": [
+            "http://campanhas-api:8080"
+          ],
+          "encoding": "no-op"
+        }
+      ]
+    },
+    {
+      "endpoint": "/api/transparencia/campanhas",
+      "method": "GET",
+      "output_encoding": "no-op",
+      "input_headers": [
+        "Authorization",
+        "Content-Type",
+        "Accept"
+      ],
+      "backend": [
+        {
+          "url_pattern": "/api/transparencia/campanhas",
+          "method": "GET",
+          "host": [
+            "http://campanhas-api:8080"
+          ],
+          "encoding": "no-op"
+        }
+      ]
+    }
+  ]
+}
