@@ -40,6 +40,7 @@ kubectl -n conexao-solidaria get pods
 
 | Serviço | Endereço (com o port-forward) |
 |---|---|
+| **API Gateway** (ponto único de entrada) | http://localhost:8088 |
 | `usuarios-api` | http://localhost:5081/swagger |
 | `campanhas-api` | http://localhost:5082/swagger |
 | `doacoes-worker` | http://localhost:5083/health/ready |
@@ -62,6 +63,7 @@ docker compose ps          # infraestrutura "healthy" e serviços "running"
 
 | Serviço | Endereço |
 |---|---|
+| **API Gateway** | http://localhost:8088 |
 | `usuarios-api` | http://localhost:5081/swagger |
 | `campanhas-api` | http://localhost:5082/swagger |
 | `doacoes-worker` | http://localhost:5083/health/ready |
@@ -126,10 +128,14 @@ A doação é assíncrona: a `campanhas-api` grava a doação como `Pendente` e 
 
 Todos os serviços expõem `/health/live`, `/health/ready` e `/metrics` (Prometheus).
 
+## API Gateway
+
+O [KrakenD](https://www.krakend.io/) é o ponto único de entrada (`http://localhost:8088`, no compose e no port-forward do cluster) e roteia cada rota da tabela de endpoints para a `usuarios-api` ou a `campanhas-api`. A configuração declarativa está em [`deploy/k8s/gateway/krakend.json`](deploy/k8s/gateway/krakend.json) e é a mesma nos dois ambientes. O gateway repassa o header `Authorization` e devolve as respostas sem alteração (status, `Location`, `X-Cache`, ProblemDetails); quem valida o JWT são os próprios serviços. Rota não declarada responde 404 no gateway.
+
 ## Swagger e Postman
 
 - Swagger em `/swagger` nas duas APIs, com o botão **Authorize** para o JWT.
-- Coleção Postman do fluxo completo em [`docs/postman/`](docs/postman/README.md).
+- Coleção Postman do fluxo completo em [`docs/postman/`](docs/postman/README.md), com um ambiente direto nos serviços e outro pelo gateway.
 
 ## Observabilidade
 
@@ -162,8 +168,8 @@ O workflow [`CI`](.github/workflows/ci.yml) roda em todo PR e em todo push na `m
 | Job | O que faz |
 |---|---|
 | **Build e testes** | `dotnet build` e todos os testes (unidade e integração com PostgreSQL, RabbitMQ e Redis via Testcontainers); resultados `.trx` como artefato |
-| **Manifestos e scripts** | `yamllint`, `docker compose config`, `kubeconform` nos manifestos renderizados pelo Kustomize, JSON do dashboard e `shellcheck` |
-| **Ponta a ponta (docker compose)** | Constrói as três imagens, sobe a plataforma inteira e executa a coleção Postman do fluxo de doação |
+| **Manifestos e scripts** | `yamllint`, `docker compose config`, `kubeconform` nos manifestos renderizados pelo Kustomize, JSON do dashboard, `shellcheck` e `krakend check` |
+| **Ponta a ponta (docker compose)** | Constrói as três imagens, sobe a plataforma inteira (com o gateway) e executa a coleção Postman do fluxo de doação direto nos serviços e pelo gateway |
 | **Imagem \<serviço\>** | Só na `main`: publica `ghcr.io/fcg-grupo-16/conexao-solidaria/<serviço>:<sha do commit>` |
 
 A `main` é protegida: só recebe PR com os três primeiros jobs verdes.

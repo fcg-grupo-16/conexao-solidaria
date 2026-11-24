@@ -15,10 +15,15 @@ resources:
   - 22-doacoes-worker.yaml
   - 30-prometheus.yaml
   - 31-grafana.yaml
+  - 40-gateway.yaml
 
 # Configuração do Prometheus e do Grafana gerada a partir dos arquivos versionados em observabilidade/:
 # o JSON do dashboard é a fonte; o ConfigMap é derivado dele (não editar o ConfigMap à mão).
 configMapGenerator:
+  - name: gateway-config
+    namespace: conexao-solidaria
+    files:
+      - gateway/krakend.json
   - name: prometheus-config
     namespace: conexao-solidaria
     files:

@@ -22,10 +22,10 @@ encaminhar() {
 }
 
 echo "Encaminhando portas (Ctrl+C para encerrar):"
-encaminhar svc/gateway 8000:80 "API Gateway"
-encaminhar svc/usuarios-api 5081:80 "usuarios-api (/swagger)"
-encaminhar svc/campanhas-api 5082:80 "campanhas-api (/swagger)"
-encaminhar svc/doacoes-worker 5083:80 "doacoes-worker (/health)"
+encaminhar svc/gateway 8088:80 "API Gateway"
+encaminhar svc/usuarios-api 5081:8080 "usuarios-api (/swagger)"
+encaminhar svc/campanhas-api 5082:8080 "campanhas-api (/swagger)"
+encaminhar svc/doacoes-worker 5083:8080 "doacoes-worker (/health)"
 encaminhar svc/rabbitmq 15672:15672 "RabbitMQ Management"
 encaminhar svc/grafana 3000:80 "Grafana"
 encaminhar svc/prometheus 9090:9090 "Prometheus"

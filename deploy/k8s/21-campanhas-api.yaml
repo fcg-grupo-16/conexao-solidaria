@@ -24,8 +24,9 @@ spec:
   selector:
     app.kubernetes.io/name: campanhas-api
   ports:
+    # Mesma porta do container e do docker compose: o gateway usa o mesmo endereço nos dois ambientes.
     - name: http
-      port: 80
+      port: 8080
       targetPort: http
 ---
 apiVersion: apps/v1

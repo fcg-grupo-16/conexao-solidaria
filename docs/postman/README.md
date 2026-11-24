@@ -4,8 +4,10 @@ Fluxo completo do MVP, na ordem do vídeo: cadastro de doador → login (JWT) �
 
 ## Como usar
 
-1. Importe `conexao-solidaria.postman_collection.json` e `local.postman_environment.json` no Postman.
-2. Selecione o ambiente **Conexão Solidária — local** e ajuste `usuariosUrl` e `campanhasUrl` se necessário (com o gateway, as duas apontam para o endereço dele).
+1. Importe `conexao-solidaria.postman_collection.json` e um dos ambientes no Postman:
+   - `gateway.postman_environment.json` — tudo pelo API Gateway (`http://localhost:8088`);
+   - `local.postman_environment.json` — direto em cada serviço (`5081` e `5082`).
+2. Selecione o ambiente.
 3. Rode a coleção pelo **Runner**, em ordem. Cada requisição guarda o que a próxima precisa (`tokenGestor`, `tokenDoador`, `campanhaId`, `doacaoId`); o cadastro gera e-mail e CPF válidos novos a cada execução.
 
 As credenciais do gestor no ambiente são as **de demonstração** do seed (`GestorInicial:*`).
@@ -13,7 +15,7 @@ As credenciais do gestor no ambiente são as **de demonstração** do seed (`Ges
 Pela linha de comando:
 
 ```bash
-npx newman run docs/postman/conexao-solidaria.postman_collection.json -e docs/postman/local.postman_environment.json
+npx newman run docs/postman/conexao-solidaria.postman_collection.json -e docs/postman/gateway.postman_environment.json
 ```
 
 ## Swagger
