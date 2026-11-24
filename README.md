@@ -29,14 +29,31 @@ docs/           ADRs, diagrama, justificativa dos bancos e roteiro do vídeo
 
 ## Desenvolvimento
 
-Pré-requisito: [.NET SDK 10](https://dotnet.microsoft.com/download) (versão fixada em `global.json`).
+Pré-requisitos: [.NET SDK 10](https://dotnet.microsoft.com/download) (versão fixada em `global.json`) e Docker (os testes de integração sobem PostgreSQL com Testcontainers).
 
 ```bash
 dotnet build ConexaoSolidaria.slnx
 dotnet test --solution ConexaoSolidaria.slnx
 ```
 
+Migrations do EF Core (ferramenta local fixada em `.config/dotnet-tools.json`):
+
+```bash
+dotnet tool restore
+dotnet ef migrations add <Nome> -p src/Usuarios/Usuarios.Infrastructure -s src/Usuarios/Usuarios.Api -o Persistencia/Migrations
+```
+
+As APIs aplicam as migrations pendentes ao iniciar (`Banco:AplicarMigrations`, padrão `true`).
+
 Versões de pacotes ficam centralizadas em `Directory.Packages.props`; os `.csproj` não declaram versão.
+
+## Endpoints
+
+| Método | Rota | Acesso | Serviço | Descrição |
+|---|---|---|---|---|
+| `POST` | `/api/usuarios` | público | `usuarios-api` | Cadastro de doador (e-mail e CPF únicos, senha com BCrypt) |
+
+Todos os serviços expõem `/health/live`, `/health/ready` e `/metrics` (Prometheus).
 
 ## Decisões de arquitetura
 
