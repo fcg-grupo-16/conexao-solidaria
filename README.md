@@ -37,3 +37,7 @@ dotnet test ConexaoSolidaria.slnx
 ```
 
 Versões de pacotes ficam centralizadas em `Directory.Packages.props`; os `.csproj` não declaram versão.
+
+## Decisões de arquitetura
+
+As decisões estão registradas como ADRs em [`docs/adr/`](docs/adr/README.md): monorepo, bancos de dados (PostgreSQL + Redis), mensageria (RabbitMQ + MassTransit com outbox) e observabilidade.
