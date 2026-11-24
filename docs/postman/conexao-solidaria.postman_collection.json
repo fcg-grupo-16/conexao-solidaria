@@ -1,0 +1,697 @@
+{
+  "info": {
+    "_postman_id": "ed3bb96d-421e-4493-bb99-f2d783ed2617",
+    "name": "Conexão Solidária",
+    "description": "Fluxo completo do MVP: cadastro de doador → login (JWT) → criação de campanha → doação → painel de transparência atualizado pelo worker.\n\nExecute em ordem (Runner). As variáveis de URL e as credenciais do gestor vêm do ambiente.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "1. Usuários",
+      "item": [
+        {
+          "name": "Cadastrar doador (público)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{usuariosUrl}}/api/usuarios",
+              "host": [
+                "{{usuariosUrl}}"
+              ],
+              "path": [
+                "api",
+                "usuarios"
+              ]
+            },
+            "description": "Cadastro público: e-mail único, CPF validado, senha com BCrypt. Todo cadastro público recebe o perfil Doador.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nomeCompleto\": \"Maria da Silva\",\n  \"email\": \"{{doadorEmail}}\",\n  \"cpf\": \"{{doadorCpf}}\",\n  \"senha\": \"{{doadorSenha}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Doador novo a cada execução: e-mail e CPF válido aleatórios.",
+                  "function digito(base, peso) {",
+                  "  let soma = 0;",
+                  "  for (let i = 0; i < base.length; i++) soma += Number(base[i]) * (peso - i);",
+                  "  const resto = soma % 11;",
+                  "  return resto < 2 ? 0 : 11 - resto;",
+                  "}",
+                  "let base = '';",
+                  "for (let i = 0; i < 9; i++) base += Math.floor(Math.random() * 10);",
+                  "const d1 = digito(base, 10);",
+                  "const d2 = digito(base + d1, 11);",
+                  "const cpf = base + d1 + d2;",
+                  "pm.collectionVariables.set('doadorCpf', `${cpf.slice(0,3)}.${cpf.slice(3,6)}.${cpf.slice(6,9)}-${cpf.slice(9)}`);",
+                  "pm.collectionVariables.set('doadorEmail', `doador.${Date.now()}@exemplo.com`);"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 201', () => pm.response.to.have.status(201));",
+                  "pm.test('perfil Doador', () => pm.expect(pm.response.json().perfil).to.eql('Doador'));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "2. Autenticação",
+      "item": [
+        {
+          "name": "Login do gestor (GestorONG)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{usuariosUrl}}/api/auth/login",
+              "host": [
+                "{{usuariosUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "login"
+              ]
+            },
+            "description": "Gestor criado pelo seed de configuração. Guarda o JWT em {{tokenGestor}}.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{gestorEmail}}\",\n  \"senha\": \"{{gestorSenha}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));",
+                  "pm.collectionVariables.set('tokenGestor', pm.response.json().token);",
+                  "pm.test('perfil GestorONG', () => pm.expect(pm.response.json().perfil).to.eql('GestorONG'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login do doador",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{usuariosUrl}}/api/auth/login",
+              "host": [
+                "{{usuariosUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "login"
+              ]
+            },
+            "description": "Guarda o JWT em {{tokenDoador}}.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{doadorEmail}}\",\n  \"senha\": \"{{doadorSenha}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));",
+                  "pm.collectionVariables.set('tokenDoador', pm.response.json().token);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Quem sou eu",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{usuariosUrl}}/api/usuarios/me",
+              "host": [
+                "{{usuariosUrl}}"
+              ],
+              "path": [
+                "api",
+                "usuarios",
+                "me"
+              ]
+            },
+            "description": "",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenDoador}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "3. Campanhas (GestorONG)",
+      "item": [
+        {
+          "name": "Criar campanha",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{campanhasUrl}}/api/campanhas",
+              "host": [
+                "{{campanhasUrl}}"
+              ],
+              "path": [
+                "api",
+                "campanhas"
+              ]
+            },
+            "description": "Regras: data de término não pode estar no passado e meta financeira > 0.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"titulo\": \"Natal Solidário\",\n  \"descricao\": \"Brinquedos e cestas para as crianças acolhidas pela ONG.\",\n  \"dataInicio\": \"{{dataInicio}}\",\n  \"dataFim\": \"{{dataFim}}\",\n  \"metaFinanceira\": 5000.0,\n  \"status\": \"Ativa\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenGestor}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// DataFim precisa estar no futuro (regra do PDF).",
+                  "const agora = new Date();",
+                  "pm.collectionVariables.set('dataInicio', new Date(agora.getTime() - 60 * 1000).toISOString());",
+                  "pm.collectionVariables.set('dataFim', new Date(agora.getTime() + 30 * 24 * 3600 * 1000).toISOString());"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 201', () => pm.response.to.have.status(201));",
+                  "pm.collectionVariables.set('campanhaId', pm.response.json().id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Criar campanha inválida (regras do PDF)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{campanhasUrl}}/api/campanhas",
+              "host": [
+                "{{campanhasUrl}}"
+              ],
+              "path": [
+                "api",
+                "campanhas"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"titulo\": \"Inválida\",\n  \"descricao\": \"Término no passado e meta zero.\",\n  \"dataInicio\": \"2020-01-01T00:00:00Z\",\n  \"dataFim\": \"2020-02-01T00:00:00Z\",\n  \"metaFinanceira\": 0\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenGestor}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 400', () => pm.response.to.have.status(400));",
+                  "pm.test('aponta DataFim e MetaFinanceira', () => { const e = pm.response.json().errors; pm.expect(e).to.have.property('DataFim'); pm.expect(e).to.have.property('MetaFinanceira'); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Doador não pode criar campanha (403)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{campanhasUrl}}/api/campanhas",
+              "host": [
+                "{{campanhasUrl}}"
+              ],
+              "path": [
+                "api",
+                "campanhas"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"titulo\": \"x\",\n  \"descricao\": \"x\",\n  \"dataInicio\": \"{{dataInicio}}\",\n  \"dataFim\": \"{{dataFim}}\",\n  \"metaFinanceira\": 10\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenDoador}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 403', () => pm.response.to.have.status(403));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Listar campanhas",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{campanhasUrl}}/api/campanhas",
+              "host": [
+                "{{campanhasUrl}}"
+              ],
+              "path": [
+                "api",
+                "campanhas"
+              ]
+            },
+            "description": "",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenGestor}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Detalhar campanha",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{campanhasUrl}}/api/campanhas/{{campanhaId}}",
+              "host": [
+                "{{campanhasUrl}}"
+              ],
+              "path": [
+                "api",
+                "campanhas",
+                "{{campanhaId}}"
+              ]
+            },
+            "description": "",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenGestor}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "4. Doação (Doador)",
+      "item": [
+        {
+          "name": "Doar",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{campanhasUrl}}/api/doacoes",
+              "host": [
+                "{{campanhasUrl}}"
+              ],
+              "path": [
+                "api",
+                "doacoes"
+              ]
+            },
+            "description": "A API grava a doação como Pendente e publica DoacaoRecebidaEvent no RabbitMQ (exchange doacao-recebida). Quem soma o valor é o doacoes-worker.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"idCampanha\": \"{{campanhaId}}\",\n  \"valorDoacao\": 150.0\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenDoador}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 202', () => pm.response.to.have.status(202));",
+                  "pm.collectionVariables.set('doacaoId', pm.response.json().id);",
+                  "pm.test('nasce Pendente', () => pm.expect(pm.response.json().status).to.eql('Pendente'));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Status da doação",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{campanhasUrl}}/api/doacoes/{{doacaoId}}",
+              "host": [
+                "{{campanhasUrl}}"
+              ],
+              "path": [
+                "api",
+                "doacoes",
+                "{{doacaoId}}"
+              ]
+            },
+            "description": "",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenDoador}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Dá tempo de o worker processar.",
+                  "setTimeout(() => {}, 1500);"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('processada pelo worker', () => pm.expect(pm.response.json().status).to.eql('Processada'));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "5. Transparência (público)",
+      "item": [
+        {
+          "name": "Painel de transparência",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{campanhasUrl}}/api/transparencia/campanhas",
+              "host": [
+                "{{campanhasUrl}}"
+              ],
+              "path": [
+                "api",
+                "transparencia",
+                "campanhas"
+              ]
+            },
+            "description": "Só campanhas Ativa, com título, meta e valor arrecadado. Header X-Cache: HIT/MISS.",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('status 200', () => pm.response.to.have.status(200));",
+                  "const c = pm.response.json().find(x => x.id === pm.collectionVariables.get('campanhaId'));",
+                  "pm.test('campanha aparece com o valor somado pelo worker', () => { pm.expect(c).to.not.be.undefined; pm.expect(c.valorArrecadado).to.be.at.least(150); });"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "doadorEmail",
+      "value": ""
+    },
+    {
+      "key": "doadorCpf",
+      "value": ""
+    },
+    {
+      "key": "tokenGestor",
+      "value": ""
+    },
+    {
+      "key": "tokenDoador",
+      "value": ""
+    },
+    {
+      "key": "campanhaId",
+      "value": ""
+    },
+    {
+      "key": "doacaoId",
+      "value": ""
+    },
+    {
+      "key": "dataInicio",
+      "value": ""
+    },
+    {
+      "key": "dataFim",
+      "value": ""
+    },
+    {
+      "key": "doadorSenha",
+      "value": "Doar2026!"
+    }
+  ]
+}
