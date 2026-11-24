@@ -1,7 +1,8 @@
 name: CI
 
 # Roda em todo PR e em todo push na main (requisito do PDF). Na main, além de validar, publica as três
-# imagens no GitHub Container Registry com a tag = SHA do commit.
+# imagens no GitHub Container Registry com a tag = SHA do commit. Também pode ser disparado à mão
+# (Actions → CI → Run workflow).
 on:
   push:
     branches: [main]
@@ -148,7 +149,8 @@ jobs:
     name: Imagem ${{ matrix.servico }}
     runs-on: ubuntu-latest
     needs: [build-and-test, manifestos, ponta-a-ponta]
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    # Push na main ou disparo manual na main ("Run workflow"), usado na gravação do vídeo.
+    if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
     permissions:
       contents: read
       packages: write
