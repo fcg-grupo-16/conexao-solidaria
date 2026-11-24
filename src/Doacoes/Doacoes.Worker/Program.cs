@@ -19,6 +19,9 @@ builder.Services.AddSingleton<MetricasDoWorker>();
 var app = builder.Build();
 
 app.UsarObservabilidade();
+
+// Métricas de negócio criadas já na subida: o /metrics as expõe (com zero) antes do primeiro uso.
+_ = app.Services.GetRequiredService<MetricasDoWorker>();
 app.MapGet("/", () => Results.Ok(new { servico = "doacoes-worker", fila = "doacoes-worker-doacao-recebida" }))
     .ExcludeFromDescription();
 

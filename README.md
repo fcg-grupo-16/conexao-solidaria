@@ -50,6 +50,13 @@ kubectl -n conexao-solidaria get pods
 
 Os manifestos ficam em [`deploy/k8s/`](deploy/k8s) (Kustomize): namespace, ConfigMaps, Secrets, PostgreSQL e RabbitMQ (StatefulSet com volume), Redis, e um Deployment + Service por serviço — APIs e worker com 2 réplicas, probes de *startup*, *readiness* e *liveness*, limites de recurso, usuário não root e sistema de arquivos somente leitura. A chave do JWT e as credenciais ficam num Secret só, referenciado por quem precisa (um valor, um lugar).
 
+Para provar o fluxo e conferir a entrega (com o `port-forward.sh` rodando ou não):
+
+```bash
+./scripts/smoke-test.sh       # 23 verificações pelo gateway: cadastro, login, regras, doação → fila → worker → painel
+./scripts/verify-entrega.sh   # checklist do PDF contra o cluster: pods, /health, /metrics, Prometheus, Grafana, RabbitMQ, smoke test
+```
+
 Para remover: `./scripts/undeploy-minikube.sh`.
 
 ## Rodando com Docker Compose (desenvolvimento)
@@ -77,7 +84,7 @@ Gestor de demonstração: `gestor@esperancasolidaria.org` / `Gestor@2026`. Para 
 npx newman run docs/postman/conexao-solidaria.postman_collection.json -e docs/postman/local.postman_environment.json
 ```
 
-Para derrubar e apagar os dados: `docker compose down -v`. Todas as credenciais versionadas são **de demonstração**.
+O `./scripts/smoke-test.sh` também funciona contra o compose. Para derrubar e apagar os dados: `docker compose down -v`. Todas as credenciais versionadas são **de demonstração**.
 
 A entrega roda no Kubernetes (minikube); o compose existe para desenvolvimento e usa as mesmas variáveis de ambiente dos manifestos.
 
@@ -169,7 +176,7 @@ O workflow [`CI`](.github/workflows/ci.yml) roda em todo PR e em todo push na `m
 |---|---|
 | **Build e testes** | `dotnet build` e todos os testes (unidade e integração com PostgreSQL, RabbitMQ e Redis via Testcontainers); resultados `.trx` como artefato |
 | **Manifestos e scripts** | `yamllint`, `docker compose config`, `kubeconform` nos manifestos renderizados pelo Kustomize, JSON do dashboard, `shellcheck` e `krakend check` |
-| **Ponta a ponta (docker compose)** | Constrói as três imagens, sobe a plataforma inteira (com o gateway) e executa a coleção Postman do fluxo de doação direto nos serviços e pelo gateway |
+| **Ponta a ponta (docker compose)** | Constrói as três imagens, sobe a plataforma inteira (com o gateway), executa a coleção Postman direto nos serviços e pelo gateway, e roda o `smoke-test.sh` |
 | **Imagem \<serviço\>** | Só na `main`: publica `ghcr.io/fcg-grupo-16/conexao-solidaria/<serviço>:<sha do commit>` |
 
 A `main` é protegida: só recebe PR com os três primeiros jobs verdes.

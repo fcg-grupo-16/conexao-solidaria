@@ -17,6 +17,10 @@ public sealed class MetricasDeUsuarios
         var medidor = fabrica.Create(NomeMedidor);
         _cadastros = medidor.CreateCounter<long>("usuarios_cadastrados", description: "Doadores cadastrados.");
         _logins = medidor.CreateCounter<long>("usuarios_logins", description: "Tentativas de login por resultado e perfil.");
+
+        // Séries publicadas com zero desde a subida: cada réplica expõe as métricas antes do primeiro uso.
+        _cadastros.Add(0);
+        _logins.Add(0, new KeyValuePair<string, object?>("resultado", "falha"), new KeyValuePair<string, object?>("perfil", "desconhecido"));
     }
 
     /// <summary>Doador cadastrado.</summary>

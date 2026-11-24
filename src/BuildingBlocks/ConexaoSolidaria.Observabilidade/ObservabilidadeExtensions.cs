@@ -88,6 +88,10 @@ public static class ObservabilidadeExtensions
     /// </summary>
     public static WebApplication UsarObservabilidade(this WebApplication app)
     {
+        // Inicia a coleta de métricas já aqui, e não só quando o host sobe: medições feitas antes de o
+        // MeterProvider existir são descartadas (ex.: contadores de negócio publicados com zero na subida).
+        _ = app.Services.GetService<MeterProvider>();
+
         app.UseSerilogRequestLogging(opcoes =>
         {
             opcoes.MessageTemplate = "HTTP {RequestMethod} {RequestPath} respondeu {StatusCode} em {Elapsed:0.0} ms";
