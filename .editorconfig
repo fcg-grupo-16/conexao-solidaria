@@ -66,3 +66,8 @@ dotnet_naming_symbols.private_field_symbols.applicable_accessibilities = private
 
 dotnet_naming_style.begins_with_underscore.required_prefix = _
 dotnet_naming_style.begins_with_underscore.capitalization = camel_case
+
+# Migrations são geradas pelo dotnet ef: não aplicar regras de estilo.
+[**/Migrations/*.cs]
+generated_code = true
+dotnet_analyzer_diagnostic.severity = none
