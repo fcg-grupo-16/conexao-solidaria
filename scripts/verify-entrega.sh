@@ -75,9 +75,12 @@ for par in usuarios-api:18081 campanhas-api:18082 doacoes-worker:18083; do
   servico=${par%%:*}; porta=${par##*:}
   checar "$servico /health/ready Healthy" "[[ \$(curl -s http://localhost:$porta/health/ready | jq -r .status) == Healthy ]]"
 done
-checar "usuarios-api expõe usuarios_cadastrados_total" "curl -s http://localhost:18081/metrics | grep -q '^usuarios_cadastrados_total'"
-checar "campanhas-api expõe doacoes_recebidas_total" "curl -s http://localhost:18082/metrics | grep -q '^doacoes_recebidas_total'"
-checar "doacoes-worker expõe doacoes_processadas_total" "curl -s http://localhost:18083/metrics | grep -q '^doacoes_processadas_total'"
+# Lê o /metrics inteiro antes de procurar: com pipefail, "curl | grep -q" falha de forma intermitente,
+# porque o grep encerra no primeiro acerto e o curl morre com SIGPIPE.
+expoe_metrica() { local corpo; corpo=$(curl -s "http://localhost:$1/metrics"); [[ "$corpo" == *$'\n'"$2"* ]]; }
+checar "usuarios-api expõe usuarios_cadastrados_total" "expoe_metrica 18081 usuarios_cadastrados_total"
+checar "campanhas-api expõe doacoes_recebidas_total" "expoe_metrica 18082 doacoes_recebidas_total"
+checar "doacoes-worker expõe doacoes_processadas_total" "expoe_metrica 18083 doacoes_processadas_total"
 
 echo "Observabilidade (Prometheus e Grafana)"
 ALVOS=$(curl -s http://localhost:19090/api/v1/targets | jq -r '[.data.activeTargets[] | .health] | "\(map(select(. == "up")) | length)/\(length)"')
