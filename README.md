@@ -52,6 +52,11 @@ Versões de pacotes ficam centralizadas em `Directory.Packages.props`; os `.cspr
 | Método | Rota | Acesso | Serviço | Descrição |
 |---|---|---|---|---|
 | `POST` | `/api/usuarios` | público | `usuarios-api` | Cadastro de doador (e-mail e CPF únicos, senha com BCrypt) |
+| `POST` | `/api/auth/login` | público | `usuarios-api` | Login; devolve JWT com a claim `role` (`GestorONG` ou `Doador`) |
+| `GET` | `/api/usuarios/me` | autenticado | `usuarios-api` | Dados do dono do token |
+| `GET` | `/api/usuarios/{id}` | `GestorONG` | `usuarios-api` | Dados de um usuário |
+
+O único `GestorONG` nasce do seed de configuração (`GestorInicial:*`); o cadastro público só cria doadores. A chave, o emissor e o público do JWT (`Jwt:*`) são os mesmos na `usuarios-api`, que emite, e na `campanhas-api`, que valida.
 
 Todos os serviços expõem `/health/live`, `/health/ready` e `/metrics` (Prometheus).
 
