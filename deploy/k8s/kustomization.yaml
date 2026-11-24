@@ -13,3 +13,25 @@ resources:
   - 20-usuarios-api.yaml
   - 21-campanhas-api.yaml
   - 22-doacoes-worker.yaml
+  - 30-prometheus.yaml
+  - 31-grafana.yaml
+
+# Configuração do Prometheus e do Grafana gerada a partir dos arquivos versionados em observabilidade/:
+# o JSON do dashboard é a fonte; o ConfigMap é derivado dele (não editar o ConfigMap à mão).
+configMapGenerator:
+  - name: prometheus-config
+    namespace: conexao-solidaria
+    files:
+      - observabilidade/prometheus.yml
+  - name: grafana-datasources
+    namespace: conexao-solidaria
+    files:
+      - datasources.yaml=observabilidade/grafana-datasource.yaml
+  - name: grafana-dashboard-provedores
+    namespace: conexao-solidaria
+    files:
+      - dashboards.yaml=observabilidade/grafana-dashboards.yaml
+  - name: grafana-dashboards
+    namespace: conexao-solidaria
+    files:
+      - observabilidade/dashboards/conexao-solidaria.json

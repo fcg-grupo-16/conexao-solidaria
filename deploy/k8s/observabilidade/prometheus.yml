@@ -1,0 +1,61 @@
+# Coleta do Prometheus da plataforma Conexão Solidária.
+global:
+  scrape_interval: 10s
+  evaluation_interval: 10s
+
+scrape_configs:
+  # Serviços .NET: todo pod do namespace com a anotação prometheus.io/scrape=true.
+  - job_name: servicos
+    kubernetes_sd_configs:
+      - role: pod
+        namespaces:
+          names: [conexao-solidaria]
+    relabel_configs:
+      - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_scrape]
+        action: keep
+        regex: "true"
+      - source_labels: [__meta_kubernetes_pod_phase]
+        action: keep
+        regex: Running
+      - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_path]
+        target_label: __metrics_path__
+        regex: (.+)
+      - source_labels: [__meta_kubernetes_pod_ip, __meta_kubernetes_pod_annotation_prometheus_io_port]
+        target_label: __address__
+        regex: (.+);(\d+)
+        replacement: $1:$2
+      - source_labels: [__meta_kubernetes_pod_label_app_kubernetes_io_name]
+        target_label: servico
+      - source_labels: [__meta_kubernetes_pod_name]
+        target_label: pod
+
+  # RabbitMQ (plugin rabbitmq_prometheus): métricas por fila.
+  - job_name: rabbitmq
+    metrics_path: /metrics/per-object
+    static_configs:
+      - targets: [rabbitmq.conexao-solidaria.svc:15692]
+
+  # cAdvisor do kubelet, via proxy do API server: CPU e memória de cada container.
+  - job_name: cadvisor
+    scheme: https
+    tls_config:
+      ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+    authorization:
+      credentials_file: /var/run/secrets/kubernetes.io/serviceaccount/token
+    kubernetes_sd_configs:
+      - role: node
+    relabel_configs:
+      - target_label: __address__
+        replacement: kubernetes.default.svc:443
+      - source_labels: [__meta_kubernetes_node_name]
+        target_label: __metrics_path__
+        regex: (.+)
+        replacement: /api/v1/nodes/$1/proxy/metrics/cadvisor
+    metric_relabel_configs:
+      # Só o namespace da plataforma e só o que o dashboard usa: o cAdvisor expõe milhares de séries.
+      - source_labels: [namespace]
+        action: keep
+        regex: conexao-solidaria
+      - source_labels: [__name__]
+        action: keep
+        regex: container_cpu_usage_seconds_total|container_memory_working_set_bytes|container_network_(receive|transmit)_bytes_total

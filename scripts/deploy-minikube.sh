@@ -74,6 +74,10 @@ for servico in "${SERVICOS[@]}"; do
   kubectl -n "$NAMESPACE" rollout status "deployment/$servico" --timeout=420s
 done
 
+echo "==> Aguardando a observabilidade"
+kubectl -n "$NAMESPACE" rollout status deployment/prometheus --timeout=180s
+kubectl -n "$NAMESPACE" rollout status deployment/grafana --timeout=180s
+
 kubectl -n "$NAMESPACE" get pods -o wide
 cat <<FIM
 
