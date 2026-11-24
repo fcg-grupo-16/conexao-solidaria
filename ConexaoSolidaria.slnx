@@ -1,1 +1,10 @@
-<Solution />
+<Solution>
+  <Folder Name="/src/" />
+  <Folder Name="/src/BuildingBlocks/">
+    <Project Path="src/BuildingBlocks/ConexaoSolidaria.Contracts/ConexaoSolidaria.Contracts.csproj" />
+    <Project Path="src/BuildingBlocks/ConexaoSolidaria.Observabilidade/ConexaoSolidaria.Observabilidade.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/ConexaoSolidaria.BuildingBlocks.Tests/ConexaoSolidaria.BuildingBlocks.Tests.csproj" />
+  </Folder>
+</Solution>

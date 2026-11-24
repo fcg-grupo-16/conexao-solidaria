@@ -1,0 +1,7 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    Contratos de integração entre serviços. Sem dependência de infraestrutura: só tipos.
+    O MassTransit casa mensagens pelo nome completo do tipo (namespace + nome), então mover ou
+    renomear um evento quebra a entrega em produção sem erro de compilação.
+  -->
+</Project>

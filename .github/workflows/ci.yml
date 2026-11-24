@@ -33,4 +33,4 @@ jobs:
         run: dotnet build ConexaoSolidaria.slnx -c Release --no-restore
 
       - name: Testes
-        run: dotnet test ConexaoSolidaria.slnx -c Release --no-build
+        run: dotnet test --solution ConexaoSolidaria.slnx -c Release --no-build
