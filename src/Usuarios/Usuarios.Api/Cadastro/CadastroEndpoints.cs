@@ -1,3 +1,4 @@
+using ConexaoSolidaria.Persistencia;
 using ConexaoSolidaria.Web;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.EntityFrameworkCore;
@@ -57,7 +58,7 @@ public static class CadastroEndpoints
         {
             await banco.SaveChangesAsync(cancelamento);
         }
-        catch (DbUpdateException erro) when (ErrosDeBanco.EhViolacaoDeUnicidade(erro))
+        catch (DbUpdateException erro) when (erro.EhViolacaoDeUnicidade())
         {
             // Corrida: outra requisição gravou o mesmo e-mail ou CPF entre a checagem e o insert.
             return PadroesDeApiExtensions.Conflito("Já existe um usuário cadastrado com este e-mail ou CPF.");

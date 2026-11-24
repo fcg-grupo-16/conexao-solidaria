@@ -9,6 +9,7 @@ WORKDIR /src
 # Restore em camada própria: só muda quando um .csproj ou as versões centrais mudam.
 COPY global.json Directory.Build.props Directory.Packages.props .editorconfig ./
 COPY src/BuildingBlocks/ConexaoSolidaria.Observabilidade/ConexaoSolidaria.Observabilidade.csproj src/BuildingBlocks/ConexaoSolidaria.Observabilidade/
+COPY src/BuildingBlocks/ConexaoSolidaria.Persistencia/ConexaoSolidaria.Persistencia.csproj src/BuildingBlocks/ConexaoSolidaria.Persistencia/
 COPY src/BuildingBlocks/ConexaoSolidaria.Web/ConexaoSolidaria.Web.csproj src/BuildingBlocks/ConexaoSolidaria.Web/
 COPY src/Usuarios/Usuarios.Domain/Usuarios.Domain.csproj src/Usuarios/Usuarios.Domain/
 COPY src/Usuarios/Usuarios.Infrastructure/Usuarios.Infrastructure.csproj src/Usuarios/Usuarios.Infrastructure/
@@ -16,6 +17,7 @@ COPY src/Usuarios/Usuarios.Api/Usuarios.Api.csproj src/Usuarios/Usuarios.Api/
 RUN dotnet restore src/Usuarios/Usuarios.Api/Usuarios.Api.csproj
 
 COPY src/BuildingBlocks/ConexaoSolidaria.Observabilidade/ src/BuildingBlocks/ConexaoSolidaria.Observabilidade/
+COPY src/BuildingBlocks/ConexaoSolidaria.Persistencia/ src/BuildingBlocks/ConexaoSolidaria.Persistencia/
 COPY src/BuildingBlocks/ConexaoSolidaria.Web/ src/BuildingBlocks/ConexaoSolidaria.Web/
 COPY src/Usuarios/ src/Usuarios/
 RUN dotnet publish src/Usuarios/Usuarios.Api/Usuarios.Api.csproj -c Release -o /app --no-restore /p:UseAppHost=false

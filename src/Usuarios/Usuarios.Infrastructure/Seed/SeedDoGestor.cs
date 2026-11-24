@@ -1,3 +1,4 @@
+using ConexaoSolidaria.Persistencia;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -71,7 +72,7 @@ public static class SeedDoGestor
             await banco.SaveChangesAsync(cancelamento);
             log.LogInformation("GestorONG inicial {UsuarioId} criado", gestor.Id);
         }
-        catch (DbUpdateException erro) when (ErrosDeBanco.EhViolacaoDeUnicidade(erro))
+        catch (DbUpdateException erro) when (erro.EhViolacaoDeUnicidade())
         {
             log.LogInformation("GestorONG inicial já criado por outra réplica");
         }

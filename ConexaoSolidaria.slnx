@@ -3,7 +3,12 @@
   <Folder Name="/src/BuildingBlocks/">
     <Project Path="src/BuildingBlocks/ConexaoSolidaria.Contracts/ConexaoSolidaria.Contracts.csproj" />
     <Project Path="src/BuildingBlocks/ConexaoSolidaria.Observabilidade/ConexaoSolidaria.Observabilidade.csproj" />
+    <Project Path="src/BuildingBlocks/ConexaoSolidaria.Persistencia/ConexaoSolidaria.Persistencia.csproj" />
     <Project Path="src/BuildingBlocks/ConexaoSolidaria.Web/ConexaoSolidaria.Web.csproj" />
+  </Folder>
+  <Folder Name="/src/Campanhas/">
+    <Project Path="src/Campanhas/Campanhas.Domain/Campanhas.Domain.csproj" />
+    <Project Path="src/Campanhas/Campanhas.Infrastructure/Campanhas.Infrastructure.csproj" />
   </Folder>
   <Folder Name="/src/Usuarios/">
     <Project Path="src/Usuarios/Usuarios.Api/Usuarios.Api.csproj" />
@@ -11,6 +16,8 @@
     <Project Path="src/Usuarios/Usuarios.Infrastructure/Usuarios.Infrastructure.csproj" />
   </Folder>
   <Folder Name="/tests/">
+    <Project Path="tests/Campanhas.Domain.Tests/Campanhas.Domain.Tests.csproj" />
+    <Project Path="tests/Campanhas.IntegrationTests/Campanhas.IntegrationTests.csproj" />
     <Project Path="tests/ConexaoSolidaria.BuildingBlocks.Tests/ConexaoSolidaria.BuildingBlocks.Tests.csproj" />
     <Project Path="tests/Usuarios.Api.IntegrationTests/Usuarios.Api.IntegrationTests.csproj" />
     <Project Path="tests/Usuarios.Domain.Tests/Usuarios.Domain.Tests.csproj" />
