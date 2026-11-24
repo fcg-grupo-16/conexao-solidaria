@@ -1,8 +1,8 @@
 using ConexaoSolidaria.Observabilidade;
+using ConexaoSolidaria.Persistencia;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 using Usuarios.Domain;
 using Usuarios.Infrastructure.Persistencia;
 using Usuarios.Infrastructure.Seed;
@@ -34,24 +34,9 @@ public static class InfraestruturaExtensions
     }
 
     /// <summary>Provider e convenção de nomes (snake_case) do banco.</summary>
-    public static void ConfigurarBanco(DbContextOptionsBuilder opcoes, string conexao) =>
-        opcoes.UseNpgsql(conexao).UseSnakeCaseNamingConvention();
+    public static void ConfigurarBanco(DbContextOptionsBuilder opcoes, string conexao) => opcoes.UsarPostgreSql(conexao);
 
-    /// <summary>
-    /// Aplica as migrations pendentes. O EF Core trava a tabela de histórico durante a aplicação,
-    /// então réplicas subindo juntas não aplicam a mesma migration duas vezes.
-    /// </summary>
-    public static async Task AplicarMigrationsAsync(this IServiceProvider services, CancellationToken cancelamento = default)
-    {
-        await using var escopo = services.CreateAsyncScope();
-        var banco = escopo.ServiceProvider.GetRequiredService<UsuariosDbContext>();
-        var log = escopo.ServiceProvider.GetRequiredService<ILoggerFactory>().CreateLogger(typeof(InfraestruturaExtensions));
-
-        var pendentes = (await banco.Database.GetPendingMigrationsAsync(cancelamento)).ToList();
-        if (pendentes.Count > 0)
-        {
-            log.LogInformation("Aplicando {Quantidade} migration(s): {Migrations}", pendentes.Count, pendentes);
-            await banco.Database.MigrateAsync(cancelamento);
-        }
-    }
+    /// <summary>Aplica as migrations pendentes do <see cref="UsuariosDbContext"/>.</summary>
+    public static Task AplicarMigrationsAsync(this IServiceProvider services, CancellationToken cancelamento = default) =>
+        services.AplicarMigrationsAsync<UsuariosDbContext>(cancelamento);
 }

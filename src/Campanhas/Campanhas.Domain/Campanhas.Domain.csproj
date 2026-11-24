@@ -1,0 +1,3 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Domínio de campanhas e doações: sem dependência de infraestrutura, banco ou ASP.NET. -->
+</Project>
