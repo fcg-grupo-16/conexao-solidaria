@@ -1,5 +1,39 @@
 # Conexão Solidária
 
+[![CI](https://github.com/fcg-grupo-16/conexao-solidaria/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/fcg-grupo-16/conexao-solidaria/actions/workflows/ci.yml)
+
 MVP da plataforma digital da ONG Esperança Solidária para gestão de campanhas de arrecadação e doações — Hackathon da pós-graduação FIAP.
 
-Documentação completa em construção. Acompanhe o andamento no épico [#1](https://github.com/fcg-grupo-16/conexao-solidaria/issues/1).
+> Documentação completa (passo a passo para subir localmente, diagrama e justificativa dos bancos) em construção. Acompanhe o andamento no épico [#1](https://github.com/fcg-grupo-16/conexao-solidaria/issues/1).
+
+## Visão geral
+
+| Serviço | Responsabilidade |
+|---|---|
+| `usuarios-api` | Cadastro público de doadores, login e emissão de JWT (roles `GestorONG` e `Doador`) |
+| `campanhas-api` | Gestão de campanhas, painel de transparência público e intenção de doação |
+| `doacoes-worker` | Consome `DoacaoRecebidaEvent` e atualiza o valor arrecadado da campanha |
+
+Infraestrutura: PostgreSQL, Redis, RabbitMQ, Prometheus, Grafana e Kubernetes (minikube).
+
+## Estrutura do repositório
+
+```
+src/            código dos serviços e building blocks compartilhados
+tests/          testes de unidade e de integração
+deploy/         manifestos Kubernetes e configuração do gateway
+observability/  Prometheus e dashboards do Grafana
+scripts/        deploy no minikube, smoke test e verificação da entrega
+docs/           ADRs, diagrama, justificativa dos bancos e roteiro do vídeo
+```
+
+## Desenvolvimento
+
+Pré-requisito: [.NET SDK 10](https://dotnet.microsoft.com/download) (versão fixada em `global.json`).
+
+```bash
+dotnet build ConexaoSolidaria.slnx
+dotnet test ConexaoSolidaria.slnx
+```
+
+Versões de pacotes ficam centralizadas em `Directory.Packages.props`; os `.csproj` não declaram versão.
