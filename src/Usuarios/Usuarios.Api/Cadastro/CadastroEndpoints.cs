@@ -34,6 +34,7 @@ public static class CadastroEndpoints
         IHasherDeSenha hasher,
         TimeProvider relogio,
         ILogger<CadastrarDoadorRequest> log,
+        MetricasDeUsuarios metricas,
         CancellationToken cancelamento)
     {
         var cpf = Cpf.Criar(requisicao.Cpf);
@@ -64,6 +65,7 @@ public static class CadastroEndpoints
             return PadroesDeApiExtensions.Conflito("Já existe um usuário cadastrado com este e-mail ou CPF.");
         }
 
+        metricas.Cadastrado();
         log.LogInformation("Doador {UsuarioId} cadastrado (CPF {Cpf})", usuario.Id, cpf.Mascarado);
         return TypedResults.Created($"/api/usuarios/{usuario.Id}", UsuarioResponse.De(usuario));
     }

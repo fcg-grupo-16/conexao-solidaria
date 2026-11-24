@@ -49,6 +49,12 @@ public static class MensageriaExtensions
     public const string ExchangeDoacaoRecebida = "doacao-recebida";
 
     /// <summary>
+    /// Medidor do próprio MassTransit (mensagens publicadas, consumidas, falhas, duração do consumo).
+    /// Passe-o para <c>AdicionarObservabilidade</c> para expor essas métricas em <c>/metrics</c>.
+    /// </summary>
+    public const string MedidorDoMassTransit = "MassTransit";
+
+    /// <summary>
     /// Registra o MassTransit sobre RabbitMQ. <paramref name="registrar"/> adiciona consumidores e/ou outbox.
     /// </summary>
     /// <param name="services">Serviços.</param>

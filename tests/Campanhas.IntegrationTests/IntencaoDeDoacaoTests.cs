@@ -75,6 +75,21 @@ public class IntencaoDeDoacaoTests(CampanhasApiFactory api)
     }
 
     [Fact]
+    public async Task Metrics_expoe_doacoes_recebidas_e_metricas_do_masstransit()
+    {
+        var campanhaId = await CriarCampanhaAsync();
+        await using var escuta = await EscutaDoExchange.CriarAsync(api.RabbitMqUri, MensageriaExtensions.ExchangeDoacaoRecebida);
+        var resposta = await Doador().PostAsJsonAsync(Rota, new { idCampanha = campanhaId, valorDoacao = 30m }, Cancelamento);
+        var doacaoId = (await resposta.Content.ReadFromJsonAsync<JsonElement>(Cancelamento)).GetProperty("id").GetGuid();
+        await escuta.EsperarAsync(e => e.GetProperty("message").GetProperty("doacaoId").GetGuid() == doacaoId, TimeSpan.FromSeconds(20));
+
+        var metricas = await api.CreateClient().GetStringAsync("/metrics", Cancelamento);
+
+        metricas.Should().Contain("doacoes_recebidas_total").And.Contain("doacoes_valor_recebido");
+        metricas.Should().Contain("masstransit");
+    }
+
+    [Fact]
     public async Task Api_nao_altera_o_valor_arrecadado()
     {
         var campanhaId = await CriarCampanhaAsync();

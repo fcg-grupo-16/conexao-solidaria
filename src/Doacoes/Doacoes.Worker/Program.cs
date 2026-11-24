@@ -6,7 +6,7 @@ using MassTransit;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.AdicionarObservabilidade("doacoes-worker", MetricasDoWorker.NomeMedidor);
+builder.AdicionarObservabilidade("doacoes-worker", MetricasDoWorker.NomeMedidor, MensageriaExtensions.MedidorDoMassTransit);
 builder.Services.AdicionarBancoDeCampanhas(builder.Configuration);
 builder.Services.AdicionarCacheDoPainel(builder.Configuration);
 builder.Services.AdicionarMensageria(

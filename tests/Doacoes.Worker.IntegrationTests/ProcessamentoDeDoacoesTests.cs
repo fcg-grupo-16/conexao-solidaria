@@ -143,6 +143,7 @@ public class ProcessamentoDeDoacoesTests(WorkerFactory worker)
         var metricas = await worker.CreateClient().GetStringAsync("/metrics", Cancelamento);
 
         metricas.Should().Contain("doacoes_processadas_total").And.Contain("doacoes_atraso_processamento");
+        metricas.Should().Contain("masstransit");
     }
 
     private async Task<Campanha> SalvarAsync(Campanha campanha)
