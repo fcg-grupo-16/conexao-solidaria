@@ -1,0 +1,65 @@
+using System.Net.Http.Headers;
+using Campanhas.Infrastructure.Persistencia;
+using ConexaoSolidaria.Persistencia;
+using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Mvc.Testing;
+using Microsoft.EntityFrameworkCore;
+using Testcontainers.PostgreSql;
+
+[assembly: AssemblyFixture(typeof(Campanhas.IntegrationTests.CampanhasApiFactory))]
+
+namespace Campanhas.IntegrationTests;
+
+/// <summary>
+/// campanhas-api real contra um PostgreSQL descartável (Testcontainers), uma vez por assembly.
+/// </summary>
+public sealed class CampanhasApiFactory : WebApplicationFactory<Program>, IAsyncLifetime
+{
+    private readonly PostgreSqlContainer _postgres = new PostgreSqlBuilder("postgres:17-alpine")
+        .WithDatabase("campanhasdb")
+        .Build();
+
+    /// <summary>Connection string do container.</summary>
+    public string ConnectionString => _postgres.GetConnectionString();
+
+    /// <summary>Novo contexto apontando para o container (fora do container de DI da API).</summary>
+    public CampanhasDbContext NovoContexto()
+    {
+        var opcoes = new DbContextOptionsBuilder<CampanhasDbContext>();
+        opcoes.UsarPostgreSql(ConnectionString);
+        return new CampanhasDbContext(opcoes.Options);
+    }
+
+    /// <summary>Cliente HTTP autenticado com um token do perfil informado.</summary>
+    public HttpClient ClienteComo(string perfil, Guid? usuarioId = null)
+    {
+        var cliente = CreateClient();
+        cliente.DefaultRequestHeaders.Authorization =
+            new AuthenticationHeaderValue("Bearer", GeradorDeToken.Gerar(perfil, usuarioId ?? Guid.NewGuid()));
+        return cliente;
+    }
+
+    /// <inheritdoc />
+    public async ValueTask InitializeAsync()
+    {
+        await _postgres.StartAsync();
+        // Migra já aqui: testes de persistência usam o banco antes de a API ser criada.
+        await using var banco = NovoContexto();
+        await banco.Database.MigrateAsync();
+    }
+
+    /// <inheritdoc />
+    protected override void ConfigureWebHost(IWebHostBuilder builder)
+    {
+        builder.UseEnvironment("Testing");
+        builder.UseSetting("ConnectionStrings:CampanhasDb", ConnectionString);
+        builder.UseSetting("Jwt:ChaveSecreta", GeradorDeToken.Chave);
+    }
+
+    /// <inheritdoc />
+    public override async ValueTask DisposeAsync()
+    {
+        await base.DisposeAsync();
+        await _postgres.DisposeAsync();
+    }
+}
