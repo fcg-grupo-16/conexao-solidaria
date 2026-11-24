@@ -1,0 +1,140 @@
+# usuarios-api: cadastro de doadores, login e emissão do JWT.
+# Valores sensíveis vêm de Secrets; o resto de ConfigMaps. Todos os valores são de DEMONSTRAÇÃO.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: usuarios-api
+  namespace: conexao-solidaria
+  labels:
+    app.kubernetes.io/name: usuarios-api
+    app.kubernetes.io/part-of: conexao-solidaria
+data:
+  Senha__FatorDeTrabalho: "11"
+  GestorInicial__NomeCompleto: Gestora Esperança Solidária
+  GestorInicial__Email: gestor@esperancasolidaria.org
+  GestorInicial__Cpf: 111.444.777-35
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: usuarios-api
+  namespace: conexao-solidaria
+  labels:
+    app.kubernetes.io/name: usuarios-api
+    app.kubernetes.io/part-of: conexao-solidaria
+type: Opaque
+stringData:
+  GestorInicial__Senha: Gestor@2026
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: usuarios-api
+  namespace: conexao-solidaria
+  labels:
+    app.kubernetes.io/name: usuarios-api
+    app.kubernetes.io/part-of: conexao-solidaria
+spec:
+  selector:
+    app.kubernetes.io/name: usuarios-api
+  ports:
+    - name: http
+      port: 80
+      targetPort: http
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: usuarios-api
+  namespace: conexao-solidaria
+  labels:
+    app.kubernetes.io/name: usuarios-api
+    app.kubernetes.io/component: api
+    app.kubernetes.io/part-of: conexao-solidaria
+spec:
+  replicas: 2
+  revisionHistoryLimit: 3
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: usuarios-api
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: usuarios-api
+        app.kubernetes.io/component: api
+        app.kubernetes.io/part-of: conexao-solidaria
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8080"
+        prometheus.io/path: /metrics
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1654
+        runAsGroup: 1654
+        seccompProfile:
+          type: RuntimeDefault
+      terminationGracePeriodSeconds: 30
+      containers:
+        - name: usuarios-api
+          image: conexao-solidaria/usuarios-api:dev
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 8080
+          envFrom:
+            - configMapRef:
+                name: plataforma
+            - configMapRef:
+                name: usuarios-api
+          env:
+            - name: POSTGRES_USUARIO
+              valueFrom:
+                secretKeyRef: { name: postgres, key: usuario }
+            - name: POSTGRES_SENHA
+              valueFrom:
+                secretKeyRef: { name: postgres, key: senha }
+            # $(VAR) é expandido pelo Kubernetes a partir das variáveis acima: a senha fica só no Secret.
+            - name: ConnectionStrings__UsuariosDb
+              value: Host=postgres;Database=usuariosdb;Username=$(POSTGRES_USUARIO);Password=$(POSTGRES_SENHA)
+            - name: Jwt__ChaveSecreta
+              valueFrom:
+                secretKeyRef: { name: jwt, key: Jwt__ChaveSecreta }
+            - name: GestorInicial__Senha
+              valueFrom:
+                secretKeyRef: { name: usuarios-api, key: GestorInicial__Senha }
+          startupProbe:
+            httpGet: { path: /health/live, port: http }
+            periodSeconds: 5
+            failureThreshold: 60
+          readinessProbe:
+            httpGet: { path: /health/ready, port: http }
+            periodSeconds: 10
+            timeoutSeconds: 3
+          livenessProbe:
+            httpGet: { path: /health/live, port: http }
+            periodSeconds: 15
+            timeoutSeconds: 3
+          lifecycle:
+            preStop:
+              # Dá tempo ao Service de tirar o pod do balanceamento antes de o processo parar.
+              sleep: { seconds: 5 }
+          resources:
+            requests: { cpu: 100m, memory: 192Mi }
+            limits: { cpu: 500m, memory: 384Mi }
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: tmp
+          emptyDir: {}

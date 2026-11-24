@@ -482,3 +482,6 @@ $RECYCLE.BIN/
 
 # Vim temporary swap files
 *.swp
+
+# Overlay gerado pelo scripts/deploy-minikube.sh (tag do commit)
+deploy/.overlay-local/

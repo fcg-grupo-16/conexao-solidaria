@@ -27,6 +27,28 @@ scripts/        deploy no minikube, smoke test e verificação da entrega
 docs/           ADRs, diagrama, justificativa dos bancos e roteiro do vídeo
 ```
 
+## Rodando no Kubernetes (minikube)
+
+Pré-requisitos: Docker, [minikube](https://minikube.sigs.k8s.io/docs/start/) e `kubectl`.
+
+```bash
+minikube start --cpus=4 --memory=8g
+./scripts/deploy-minikube.sh       # constrói as imagens (tag do commit), aplica deploy/k8s e espera tudo ficar pronto
+kubectl -n conexao-solidaria get pods
+./scripts/port-forward.sh          # expõe os serviços em localhost (Ctrl+C encerra)
+```
+
+| Serviço | Endereço (com o port-forward) |
+|---|---|
+| `usuarios-api` | http://localhost:5081/swagger |
+| `campanhas-api` | http://localhost:5082/swagger |
+| `doacoes-worker` | http://localhost:5083/health/ready |
+| RabbitMQ Management | http://localhost:15672 (`conexao` / `conexao-demo`) |
+
+Os manifestos ficam em [`deploy/k8s/`](deploy/k8s) (Kustomize): namespace, ConfigMaps, Secrets, PostgreSQL e RabbitMQ (StatefulSet com volume), Redis, e um Deployment + Service por serviço — APIs e worker com 2 réplicas, probes de *startup*, *readiness* e *liveness*, limites de recurso, usuário não root e sistema de arquivos somente leitura. A chave do JWT e as credenciais ficam num Secret só, referenciado por quem precisa (um valor, um lugar).
+
+Para remover: `./scripts/undeploy-minikube.sh`.
+
 ## Rodando com Docker Compose (desenvolvimento)
 
 Pré-requisito: Docker. Sobe PostgreSQL, RabbitMQ, Redis e os três serviços:
