@@ -4,7 +4,7 @@ using Npgsql;
 
 namespace Campanhas.IntegrationTests;
 
-public class PersistenciaDeCampanhasTests(BancoDeCampanhasFixture banco)
+public class PersistenciaDeCampanhasTests(CampanhasApiFactory banco)
 {
     private static readonly DateTimeOffset Agora = DateTimeOffset.UtcNow;
 

@@ -1,0 +1,6 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+  <ItemGroup>
+    <ProjectReference Include="..\Campanhas.Infrastructure\Campanhas.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\BuildingBlocks\ConexaoSolidaria.Web\ConexaoSolidaria.Web.csproj" />
+  </ItemGroup>
+</Project>
