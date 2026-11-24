@@ -1,0 +1,14 @@
+<Project>
+  <!--
+    Central Package Management: a versão de cada pacote mora SÓ aqui; os .csproj referenciam sem Version.
+    Cada issue adiciona os pacotes que passa a usar.
+
+    MassTransit fica na linha 8.x: a 9 exige licença comercial.
+  -->
+  <PropertyGroup>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+    <CentralPackageTransitivePinningEnabled>true</CentralPackageTransitivePinningEnabled>
+  </PropertyGroup>
+  <ItemGroup>
+  </ItemGroup>
+</Project>
