@@ -33,7 +33,7 @@ Pré-requisito: [.NET SDK 10](https://dotnet.microsoft.com/download) (versão fi
 
 ```bash
 dotnet build ConexaoSolidaria.slnx
-dotnet test ConexaoSolidaria.slnx
+dotnet test --solution ConexaoSolidaria.slnx
 ```
 
 Versões de pacotes ficam centralizadas em `Directory.Packages.props`; os `.csproj` não declaram versão.
