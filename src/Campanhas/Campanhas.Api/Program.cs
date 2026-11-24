@@ -11,6 +11,10 @@ var builder = WebApplication.CreateBuilder(args);
 builder.AdicionarObservabilidade("campanhas-api", MetricasDeDoacoes.NomeMedidor, MensageriaExtensions.MedidorDoMassTransit);
 builder.AdicionarPadroesDeApi();
 builder.AdicionarAutenticacaoJwt();
+builder.AdicionarSwagger(
+    "Conexão Solidária — campanhas-api",
+    "Gestão de campanhas (GestorONG), painel de transparência público e intenção de doação (Doador).",
+    typeof(Program).Assembly);
 builder.Services.AdicionarBancoDeCampanhas(builder.Configuration);
 builder.Services.AdicionarCacheDoPainel(builder.Configuration);
 builder.Services.AdicionarMensageria(
@@ -25,6 +29,7 @@ var app = builder.Build();
 app.UsarObservabilidade();
 app.UsarPadroesDeApi();
 app.UsarAutenticacaoJwt();
+app.UsarSwagger();
 
 if (app.Configuration.GetValue("Banco:AplicarMigrations", true))
 {

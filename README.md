@@ -74,6 +74,11 @@ A doação é assíncrona: a `campanhas-api` grava a doação como `Pendente` e 
 
 Todos os serviços expõem `/health/live`, `/health/ready` e `/metrics` (Prometheus).
 
+## Swagger e Postman
+
+- Swagger em `/swagger` nas duas APIs, com o botão **Authorize** para o JWT.
+- Coleção Postman do fluxo completo em [`docs/postman/`](docs/postman/README.md).
+
 ## Observabilidade
 
 Cada serviço expõe:

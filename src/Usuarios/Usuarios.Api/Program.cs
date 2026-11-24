@@ -13,6 +13,10 @@ var builder = WebApplication.CreateBuilder(args);
 builder.AdicionarObservabilidade("usuarios-api", MetricasDeUsuarios.NomeMedidor);
 builder.AdicionarPadroesDeApi();
 builder.AdicionarAutenticacaoJwt();
+builder.AdicionarSwagger(
+    "Conexão Solidária — usuarios-api",
+    "Cadastro público de doadores, login e emissão do JWT (perfis GestorONG e Doador).",
+    typeof(Program).Assembly);
 builder.Services.AdicionarInfraestruturaDeUsuarios(builder.Configuration);
 builder.Services.AddSingleton<EmissorDeToken>();
 builder.Services.AddSingleton<MetricasDeUsuarios>();
@@ -23,6 +27,7 @@ var app = builder.Build();
 app.UsarObservabilidade();
 app.UsarPadroesDeApi();
 app.UsarAutenticacaoJwt();
+app.UsarSwagger();
 
 if (app.Configuration.GetValue("Banco:AplicarMigrations", true))
 {
