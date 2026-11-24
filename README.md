@@ -26,6 +26,7 @@ Infraestrutura: PostgreSQL 17, Redis 7, RabbitMQ 3.13, Prometheus, Grafana — t
 | Decisões de arquitetura (ADRs) | [`docs/adr/`](docs/adr/README.md) |
 | Coleção Postman | [`docs/postman/`](docs/postman/README.md) |
 | Roteiro do vídeo de demonstração | [`docs/roteiro-video.md`](docs/roteiro-video.md) |
+| Template do relatório de entrega | [`docs/relatorio-entrega.md`](docs/relatorio-entrega.md) |
 
 ## Requisitos do PDF e onde estão atendidos
 
