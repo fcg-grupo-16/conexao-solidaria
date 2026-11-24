@@ -2,6 +2,8 @@ using Campanhas.Infrastructure.Persistencia;
 using ConexaoSolidaria.Observabilidade;
 using ConexaoSolidaria.Persistencia;
 using MassTransit;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -42,4 +44,43 @@ public static class InfraestruturaExtensions
     /// <summary>Aplica as migrations pendentes. Só a campanhas-api chama; o worker nunca migra.</summary>
     public static Task AplicarMigrationsDeCampanhasAsync(this IServiceProvider services, CancellationToken cancelamento = default) =>
         services.AplicarMigrationsAsync<CampanhasDbContext>(cancelamento);
+
+    /// <summary>
+    /// Espera o esquema do <c>campanhasdb</c> estar completo (migrations aplicadas pela campanhas-api).
+    /// O worker não migra; se subir antes da API, consumir mensagens contra um banco sem tabelas
+    /// mandaria todas para a fila de erro.
+    /// </summary>
+    public static async Task AguardarEsquemaDeCampanhasAsync(
+        this IServiceProvider services, TimeSpan limite, CancellationToken cancelamento = default)
+    {
+        var prazo = DateTimeOffset.UtcNow + limite;
+        var log = services.GetRequiredService<ILoggerFactory>().CreateLogger(typeof(InfraestruturaExtensions));
+
+        while (true)
+        {
+            try
+            {
+                await using var escopo = services.CreateAsyncScope();
+                var banco = escopo.ServiceProvider.GetRequiredService<CampanhasDbContext>();
+                var pendentes = (await banco.Database.GetPendingMigrationsAsync(cancelamento)).Count();
+                if (pendentes == 0)
+                {
+                    return;
+                }
+
+                log.LogInformation("Aguardando a campanhas-api aplicar {Quantidade} migration(s)", pendentes);
+            }
+            catch (Exception erro) when (erro is not OperationCanceledException)
+            {
+                log.LogInformation("Aguardando o PostgreSQL: {Erro}", erro.GetType().Name);
+            }
+
+            if (DateTimeOffset.UtcNow > prazo)
+            {
+                throw new TimeoutException($"O esquema do campanhasdb não ficou pronto em {limite}.");
+            }
+
+            await Task.Delay(TimeSpan.FromSeconds(2), cancelamento);
+        }
+    }
 }

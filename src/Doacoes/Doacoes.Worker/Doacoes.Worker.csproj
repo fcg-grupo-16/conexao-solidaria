@@ -1,0 +1,9 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+  <!--
+    Worker de processamento de doações. É um host web só para expor /health e /metrics ao Kubernetes
+    e ao Prometheus; não tem endpoints de negócio.
+  -->
+  <ItemGroup>
+    <ProjectReference Include="..\..\Campanhas\Campanhas.Infrastructure\Campanhas.Infrastructure.csproj" />
+  </ItemGroup>
+</Project>

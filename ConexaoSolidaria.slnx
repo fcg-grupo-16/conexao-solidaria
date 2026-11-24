@@ -12,6 +12,9 @@
     <Project Path="src/Campanhas/Campanhas.Domain/Campanhas.Domain.csproj" />
     <Project Path="src/Campanhas/Campanhas.Infrastructure/Campanhas.Infrastructure.csproj" />
   </Folder>
+  <Folder Name="/src/Doacoes/">
+    <Project Path="src/Doacoes/Doacoes.Worker/Doacoes.Worker.csproj" />
+  </Folder>
   <Folder Name="/src/Usuarios/">
     <Project Path="src/Usuarios/Usuarios.Api/Usuarios.Api.csproj" />
     <Project Path="src/Usuarios/Usuarios.Domain/Usuarios.Domain.csproj" />
@@ -21,6 +24,7 @@
     <Project Path="tests/Campanhas.Domain.Tests/Campanhas.Domain.Tests.csproj" />
     <Project Path="tests/Campanhas.IntegrationTests/Campanhas.IntegrationTests.csproj" />
     <Project Path="tests/ConexaoSolidaria.BuildingBlocks.Tests/ConexaoSolidaria.BuildingBlocks.Tests.csproj" />
+    <Project Path="tests/Doacoes.Worker.IntegrationTests/Doacoes.Worker.IntegrationTests.csproj" />
     <Project Path="tests/Usuarios.Api.IntegrationTests/Usuarios.Api.IntegrationTests.csproj" />
     <Project Path="tests/Usuarios.Domain.Tests/Usuarios.Domain.Tests.csproj" />
   </Folder>
