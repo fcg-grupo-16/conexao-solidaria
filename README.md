@@ -155,6 +155,19 @@ Na prontidão, a queda do RabbitMQ ou do Redis deixa a `campanhas-api` como `Deg
 
 Os logs são JSON (Serilog) com o `TraceId` da requisição; o MassTransit propaga o contexto, então a doação na API e o processamento no worker compartilham o mesmo trace.
 
+## CI/CD
+
+O workflow [`CI`](.github/workflows/ci.yml) roda em todo PR e em todo push na `main`:
+
+| Job | O que faz |
+|---|---|
+| **Build e testes** | `dotnet build` e todos os testes (unidade e integração com PostgreSQL, RabbitMQ e Redis via Testcontainers); resultados `.trx` como artefato |
+| **Manifestos e scripts** | `yamllint`, `docker compose config`, `kubeconform` nos manifestos renderizados pelo Kustomize, JSON do dashboard e `shellcheck` |
+| **Ponta a ponta (docker compose)** | Constrói as três imagens, sobe a plataforma inteira e executa a coleção Postman do fluxo de doação |
+| **Imagem \<serviço\>** | Só na `main`: publica `ghcr.io/fcg-grupo-16/conexao-solidaria/<serviço>:<sha do commit>` |
+
+A `main` é protegida: só recebe PR com os três primeiros jobs verdes.
+
 ## Decisões de arquitetura
 
 As decisões estão registradas como ADRs em [`docs/adr/`](docs/adr/README.md): monorepo, bancos de dados (PostgreSQL + Redis), mensageria (RabbitMQ + MassTransit com outbox) e observabilidade.
