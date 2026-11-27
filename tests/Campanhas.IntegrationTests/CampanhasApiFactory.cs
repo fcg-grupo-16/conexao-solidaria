@@ -54,6 +54,12 @@ public sealed class CampanhasApiFactory : WebApplicationFactory<Program>, IAsync
         // Migra já aqui: testes de persistência usam o banco antes de a API ser criada.
         await using var banco = NovoContexto();
         await banco.Database.MigrateAsync();
+
+        // Sobe a API principal já aqui, antes de qualquer réplica (WithWebHostBuilder). O MassTransit
+        // cria os instrumentos de métrica uma única vez por processo, no IMeterFactory do primeiro host
+        // que sobe; se esse host fosse uma réplica de vida curta, o Meter morreria com ela e as métricas
+        // "masstransit" sumiriam do /metrics da API principal pelo resto da execução.
+        _ = Server;
     }
 
     /// <inheritdoc />
